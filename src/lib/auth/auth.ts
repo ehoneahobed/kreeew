@@ -13,7 +13,7 @@ import { Resend as ResendClient } from 'resend';
 
 const providers: Provider[] = [];
 
-if (process.env.AUTH_CREDENTIALS_ENABLED === "true") {
+if (process.env.NEXT_PUBLIC_AUTH_CREDENTIALS_ENABLED === "true") {
     providers.push(
         CredentialsProvider({
             name: "Credentials",
@@ -48,7 +48,7 @@ if (process.env.AUTH_CREDENTIALS_ENABLED === "true") {
     );
 }
 
-if (process.env.AUTH_GITHUB_ENABLED === "true") {
+if (process.env.NEXT_PUBLIC_AUTH_GITHUB_ENABLED === "true") {
     providers.push(
         GitHub({
             clientId: process.env.AUTH_GITHUB_CLIENT_ID,
@@ -58,7 +58,7 @@ if (process.env.AUTH_GITHUB_ENABLED === "true") {
     );
 }
 
-if (process.env.AUTH_GOOGLE_ENABLED === "true") {
+if (process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED === "true") {
     providers.push(
         Google({
             clientId: process.env.AUTH_GOOGLE_CLIENT_ID,
@@ -68,7 +68,7 @@ if (process.env.AUTH_GOOGLE_ENABLED === "true") {
     );
 }
 
-if (process.env.AUTH_EMAIL_ENABLED === "true") {
+if (process.env.NEXT_PUBLIC_AUTH_EMAIL_ENABLED === "true") {
     providers.push(
         Resend({
             from: process.env.SENDER_EMAIL_ADDRESS,
