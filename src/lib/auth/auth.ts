@@ -1,4 +1,5 @@
 import NextAuth from "next-auth"
+import type { Provider } from "next-auth/providers"
 import GitHub from "next-auth/providers/github"
 import Google from "next-auth/providers/google"
 import Resend from "next-auth/providers/resend"
@@ -10,9 +11,10 @@ import { render } from '@react-email/render';
 import { VerificationEmail } from '@/lib/email-templates/verification-email';
 import { Resend as ResendClient } from 'resend';
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-    adapter: PrismaAdapter(prisma),
-    providers: [
+const providers: Provider[] = [];
+
+if (process.env.AUTH_CREDENTIALS_ENABLED === "true") {
+    providers.push(
         CredentialsProvider({
             name: "Credentials",
             credentials: {
@@ -43,14 +45,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 return user
             }
         }),
+    );
+}
+
+if (process.env.AUTH_GITHUB_ENABLED === "true") {
+    providers.push(
         GitHub({
             clientId: process.env.AUTH_GITHUB_CLIENT_ID,
             clientSecret: process.env.AUTH_GITHUB_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
         }), 
+    );
+}
+
+if (process.env.AUTH_GOOGLE_ENABLED === "true") {
+    providers.push(
         Google({
             clientId: process.env.AUTH_GOOGLE_CLIENT_ID,
             clientSecret: process.env.AUTH_GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
         }), 
+    );
+}
+
+if (process.env.AUTH_EMAIL_ENABLED === "true") {
+    providers.push(
         Resend({
             from: process.env.SENDER_EMAIL_ADDRESS,
             apiKey: process.env.RESEND_API_KEY,
@@ -73,12 +92,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 return crypto.randomUUID();
             },
         }),
-    ],
+    );
+}
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+    adapter: PrismaAdapter(prisma),
+    providers,
     session: {
         strategy: "jwt",
     },
     secret: process.env.AUTH_SECRET,
     callbacks: {
+        async signIn({ user, account, profile }) {
+            if (account?.provider === 'google') {
+                if (profile?.email_verified) {
+                    return true;
+                } else {
+                    return false; // Prevent sign-in if Google email is not verified
+                }
+            }
+            // For other providers, or if it's not an OAuth account, allow sign-in
+            return true;
+        },
         async session({ session, token }) {
             if (session.user) {
                 session.user.id = token.sub as string
