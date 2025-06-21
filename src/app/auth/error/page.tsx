@@ -18,35 +18,31 @@ export default async function AuthError({ searchParams }: PageProps) {
   const errorMessage = getErrorMessage(params?.error)
 
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center">
-      <Card className="w-full max-w-[400px] shadow-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-destructive/10 p-3">
-              <AlertCircle className="h-6 w-6 text-destructive" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl">Authentication Error</CardTitle>
-          <CardDescription className="pt-2">
-            {errorMessage}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-4">
-          <div className="text-sm text-muted-foreground text-center">
-            <p>Please try signing in again or contact support if the problem persists.</p>
-          </div>
-          <Button
-            variant="default"
-            className="w-full"
-            asChild
-          >
-            <Link href="/auth/signin">
-              Back to Sign In
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="w-full max-w-[400px] shadow-md">
+      <CardHeader className="text-center">
+        <div className="mx-auto rounded-full bg-destructive/10 p-3">
+          <AlertCircle className="h-6 w-6 text-destructive" />
+        </div>
+        <CardTitle className="text-2xl">Authentication Error</CardTitle>
+        <CardDescription className="pt-2">
+          {errorMessage}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center space-y-4">
+        <div className="text-sm text-muted-foreground text-center">
+          <p>Please try signing in again or contact support if the problem persists.</p>
+        </div>
+        <Button
+          variant="default"
+          className="w-full"
+          asChild
+        >
+          <Link href="/auth/signin">
+            Back to Sign In
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 
