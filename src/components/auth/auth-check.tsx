@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from "@/hooks/use-session"
+import { useSession } from "next-auth/react"
 import { Loader2 } from "lucide-react"
 
 interface AuthCheckProps {
@@ -18,13 +18,13 @@ export function AuthCheck({
     </div>
   )
 }: AuthCheckProps) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { status } = useSession()
 
-  if (isLoading) {
+  if (status === "loading") {
     return loading
   }
 
-  if (!isAuthenticated) {
+  if (status !== "authenticated") {
     return fallback
   }
 

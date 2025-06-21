@@ -178,7 +178,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\_Personal\\work\\auth-repo\\src\\generated\\prisma",
+      "value": "/Users/ehoneahobed/Work/Side-projects/authjs-repo/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -187,12 +187,12 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\_Personal\\work\\auth-repo\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/ehoneahobed/Work/Side-projects/authjs-repo/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -210,7 +210,7 @@ const config = {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://toollo_db_owner:npg_skyCzMu64xhK@ep-bitter-credit-a4wsxa00-pooler.us-east-1.aws.neon.tech/toollo_db?sslmode=require"
+        "value": "postgresql://authjs_owner:npg_l6yzVnPLCYs2@ep-rough-heart-a5cb2oq2-pooler.us-east-2.aws.neon.tech/authjs?sslmode=require"
       }
     }
   },
