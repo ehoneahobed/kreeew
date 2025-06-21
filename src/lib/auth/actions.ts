@@ -2,13 +2,12 @@
 
 import { signIn } from "@/lib/auth/auth"
 import { prisma } from "@/lib/prisma"
-import { AuthError } from "next-auth"
 import * as bcrypt from "bcryptjs"
-import { redirect } from "next/navigation"
 import { signUpSchema } from "@/lib/validations/auth.schema"
-import { forgotPasswordSchema, resetPasswordSchema } from "../validations/auth.schema"
+import { forgotPasswordSchema, resetPasswordSchema, signInSchema } from "../validations/auth.schema"
 import crypto from "crypto"
 import { sendPasswordResetEmail } from "../email-templates/send-password-reset-email"
+import { AuthError } from "next-auth"
 
 export async function signInWithProvider(provider: string, email?: string) {
   if (provider === "resend" && !email) {
@@ -22,12 +21,32 @@ export async function signInWithCredentials(
     formData: FormData
   ) {
     try {
-      await signIn("credentials", { ...Object.fromEntries(formData), redirectTo: "/portal" })
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+        const validatedFields = signInSchema.safeParse({ email, password });
+
+        if (!validatedFields.success) {
+            return "Invalid credentials.";
+        }
+        await signIn("credentials", {
+            email,
+            password,
+            redirectTo: "/portal",
+        });
+
+        return "Success!";
     } catch (error) {
-      if ((error as any).type === "CredentialsSignin") {
-        return "Invalid credentials."
-      }
-      throw error
+        if (error instanceof AuthError) {
+            // Check the error name for specific sign-in errors
+            switch (error.name) {
+                case "CredentialsSignin":
+                    return "Invalid email or password.";
+                default:
+                    return "An unexpected error occurred.";
+            }
+        }
+        // Re-throw other errors
+        throw error;
     }
 }
 
@@ -35,56 +54,56 @@ export async function signUpWithCredentials(
     prevState: string | undefined,
     formData: FormData
 ) {
-    const data = Object.fromEntries(formData);
-    const parsed = signUpSchema.safeParse({
-        ...data,
-        terms: data.terms === "on",
-    });
-
-    if (!parsed.success) {
-        return parsed.error.errors.map(err => err.message).join(" ");
-    }
-
-    const { name, email, password } = parsed.data;
-
     try {
-        const existingUser = await prisma.user.findUnique({
-            where: { email }
-        })
+        const name = formData.get("name") as string;
+        const email = formData.get("email") as string;
+        const password = formData.get("password") as string;
+        const confirmPassword = formData.get("confirmPassword") as string;
 
-        if (existingUser) {
-            return "User with this email already exists."
+        if (!name || !email || !password || !confirmPassword) {
+            return "All fields are required.";
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10)
+        const validatedFields = signUpSchema.safeParse({
+            name,
+            email,
+            password,
+            confirmPassword,
+        });
+
+        if (!validatedFields.success) {
+            return validatedFields.error.errors.map((e) => e.message).join("\n");
+        }
+
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
+            return "An account with this email already exists.";
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         await prisma.user.create({
             data: {
                 name,
                 email,
-                password: hashedPassword
-            }
-        })
-        
-    } catch (error) {
-        console.error(error)
-        return "Something went wrong."
-    }
-    
-    try {
+                password: hashedPassword,
+            },
+        });
+
         await signIn("credentials", {
             email,
             password,
-            redirect: false,
-        })
-    } catch (error) {
-        if ((error as any).type === "CredentialsSignin") {
-            return "Sign up successful, but automatic sign in failed. Please try signing in manually."
-        }
-        throw error
-    }
+            redirectTo: "/portal",
+        });
 
-    redirect('/portal');
+        return "Account created successfully!";
+    } catch (error) {
+        console.error(error);
+        return "An unexpected error occurred. Please try again.";
+    }
 }
 
 export async function sendPasswordResetLink(
@@ -93,13 +112,11 @@ export async function sendPasswordResetLink(
 ) {
     try {
         const email = formData.get("email") as string;
-        // 1. Validate the email
         const validatedFields = forgotPasswordSchema.safeParse({ email });
         if (!validatedFields.success) {
             return "Invalid email address.";
         }
 
-        // 2. Check if the user exists
         const user = await prisma.user.findUnique({
             where: { email: validatedFields.data.email },
         });
@@ -108,7 +125,6 @@ export async function sendPasswordResetLink(
             return "No user found with this email address.";
         }
 
-        // 3. Generate a secure token
         const passwordResetToken = await prisma.passwordResetToken.create({
             data: {
                 email: validatedFields.data.email,
@@ -117,7 +133,6 @@ export async function sendPasswordResetLink(
             },
         });
 
-        // 4. Send the password reset email
         await sendPasswordResetEmail(
             passwordResetToken.email,
             passwordResetToken.token,
@@ -142,7 +157,6 @@ export async function resetPassword(
         return "Missing reset token.";
     }
 
-    // 1. Validate the new password
     const validatedFields = resetPasswordSchema.safeParse({
         password,
         confirmPassword,
@@ -153,7 +167,6 @@ export async function resetPassword(
     }
 
     try {
-        // 2. Find and validate the token
         const existingToken = await prisma.passwordResetToken.findUnique({
             where: { token },
         });
@@ -166,23 +179,20 @@ export async function resetPassword(
             return "Token has expired.";
         }
 
-        // 3. Find the user
         const user = await prisma.user.findUnique({
             where: { email: existingToken.email },
         });
 
         if (!user) {
-            return "Invalid token."; // User associated with token not found
+            return "Invalid token.";
         }
 
-        // 4. Hash the new password and update the user
         const hashedPassword = await bcrypt.hash(password, 10);
         await prisma.user.update({
             where: { id: user.id },
             data: { password: hashedPassword },
         });
 
-        // 5. Delete the used token
         await prisma.passwordResetToken.delete({
             where: { id: existingToken.id },
         });

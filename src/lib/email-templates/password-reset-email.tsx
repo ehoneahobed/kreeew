@@ -83,10 +83,6 @@ const container = {
     padding: "68px 0 130px",
 };
 
-const logo = {
-    margin: "0 auto",
-};
-
 const heading = {
     fontSize: "32px",
     fontWeight: "300",

@@ -103,7 +103,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     secret: process.env.AUTH_SECRET,
     callbacks: {
-        async signIn({ user, account, profile }) {
+        async signIn({ user: _user, account, profile }) {
             if (account?.provider === 'google') {
                 if (profile?.email_verified) {
                     return true;

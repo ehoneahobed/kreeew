@@ -14,7 +14,6 @@ import {
   ChevronDown,
   Bell,
 } from "lucide-react"
-import { useTheme } from "next-themes"
 import {
   Tooltip,
   TooltipContent,
@@ -37,9 +36,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuGroup,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from "../../components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { menuItems } from "@/lib/menu-data"
@@ -52,7 +48,6 @@ export default function PortalLayout({
   children: React.ReactNode
 }) {
   const { data: session } = useSession()
-  const { setTheme } = useTheme()
   const user = session?.user
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = React.useState(false)
