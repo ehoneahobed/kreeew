@@ -1,11 +1,5 @@
 import { renderVerificationEmail } from "@/lib/email-templates/render-email"
-
-type EmailTheme = {
-  brandColor?: string
-  buttonText?: string
-  buttonBackground?: string
-  buttonBorder?: string
-}
+import { type EmailTheme } from "@/lib/email-templates/render-email"
 
 type EmailParams = {
   identifier: string
@@ -17,9 +11,12 @@ type EmailParams = {
   theme?: EmailTheme
 }
 
-export async function sendVerificationRequest({ identifier: to, provider, url }: EmailParams) {
+export async function sendVerificationRequest({
+  identifier: to,
+  provider,
+  url,
+}: EmailParams) {
   const { host } = new URL(url)
-  
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -30,11 +27,11 @@ export async function sendVerificationRequest({ identifier: to, provider, url }:
       from: provider.from,
       to,
       subject: `Sign in to ${host}`,
-      html: renderVerificationEmail(url, host),
+      html: await renderVerificationEmail(url, host),
       text: `Sign in to ${host}\n${url}\n\n`,
     }),
   })
- 
+
   if (!res.ok) {
     throw new Error("Resend error: " + JSON.stringify(await res.json()))
   }

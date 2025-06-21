@@ -5,6 +5,8 @@ import { signInWithCredentials } from "@/lib/auth/actions"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { PasswordInput } from "../ui/password-input"
 
 export function CredentialSignInForm() {
     const [errorMessage, dispatch] = useFormState(signInWithCredentials, undefined)
@@ -17,8 +19,16 @@ export function CredentialSignInForm() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input type="password" id="password" name="password" required />
+                <div className="flex items-center">
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                        href="/auth/forgot-password"
+                        className="ml-auto text-xs text-red-500 hover:underline"
+                    >
+                        Forgot your password?
+                    </Link>
+                </div>
+                <PasswordInput id="password" name="password" required />
             </div>
 
             {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
