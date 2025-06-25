@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -21,10 +21,8 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { resetPasswordSchema } from "@/lib/validations/auth.schema"
 import type { ResetPasswordFormData } from "@/lib/validations/auth.schema"
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({ token }: { token?: string | null }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
@@ -45,15 +43,12 @@ export function ResetPasswordForm() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
+      const response = await fetch(`/api/auth/reset-password?token=${token}`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...data,
-          token,
-        }),
+        body: JSON.stringify(data),
       })
 
       const result = await response.json()
