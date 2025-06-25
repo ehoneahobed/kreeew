@@ -5,9 +5,7 @@ export const signInSchema = z.object({
   password: z.string().min(1, { message: "Password is required." }),
 })
 
-export const signInWithMagicLinkSchema = z.object({
-  email: z.string().email(),
-})
+export const signInWithMagicLinkSchema = signInSchema.pick({ email: true })
 
 export const signUpSchema = z
   .object({
@@ -33,9 +31,7 @@ export const signUpSchema = z
     path: ["confirmPassword"],
   })
 
-export const forgotPasswordSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-})
+export const forgotPasswordSchema = signInSchema.pick({ email: true })
 
 export const resetPasswordSchema = z
   .object({
@@ -88,6 +84,8 @@ export const changePasswordSchema = z
     path: ["confirmNewPassword"],
   })
 
+export const sendVerificationSchema = signInSchema.pick({ email: true })
+
 export type SignInFormData = z.infer<typeof signInSchema>
 export type SignUpFormData = z.infer<typeof signUpSchema>
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
@@ -96,3 +94,4 @@ export type SignInWithMagicLinkFormData = z.infer<
   typeof signInWithMagicLinkSchema
 >
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>
+export type SendVerificationFormData = z.infer<typeof sendVerificationSchema>
