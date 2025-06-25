@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { signIn } from "next-auth/react"
 import { useForm } from "react-hook-form"
@@ -23,11 +23,13 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { signInSchema } from "@/lib/validations/auth.schema"
 import type { SignInFormData } from "@/lib/validations/auth.schema"
 
-export function CredentialSignInForm() {
+export function CredentialSignInForm({
+  callbackUrl,
+}: {
+  callbackUrl?: string | null
+}) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl")
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),

@@ -3,7 +3,15 @@ import Link from "next/link"
 import { CredentialSignInForm } from "@/components/auth/credential-signin-form"
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons"
 
-export default function SignInPage() {
+type Props = {
+  searchParams: Promise<{
+    callbackUrl?: string
+  }>
+}
+
+export default async function SignInPage({ searchParams }: Props) {
+  const { callbackUrl } = await searchParams
+
   const showCredentials =
     process.env.NEXT_PUBLIC_AUTH_CREDENTIALS_ENABLED === "true"
   const showSocialOrEmail =
@@ -20,7 +28,7 @@ export default function SignInPage() {
         </p>
       </div>
 
-      {showCredentials && <CredentialSignInForm />}
+      {showCredentials && <CredentialSignInForm callbackUrl={callbackUrl} />}
 
       {showCredentials && showSocialOrEmail && (
         <div className="relative">
