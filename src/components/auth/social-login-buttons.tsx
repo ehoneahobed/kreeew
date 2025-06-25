@@ -1,10 +1,12 @@
 "use client"
 
 import { FaGithub, FaGoogle } from "react-icons/fa"
-import { signInWithProvider } from "@/lib/auth/actions"
-import { Button } from "../ui/button"
 import { MdEmail } from "react-icons/md"
-import { Input } from "../ui/input"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
+import { signInWithProvider } from "@/lib/auth/actions"
 
 export function SocialLoginButtons() {
   const showGithub = process.env.NEXT_PUBLIC_AUTH_GITHUB_ENABLED === "true"
@@ -31,7 +33,7 @@ export function SocialLoginButtons() {
               <Button
                 type="submit"
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2"
+                className="flex w-full items-center justify-center gap-2"
               >
                 <FaGithub className="h-5 w-5" />
                 <span>Continue with GitHub</span>
@@ -43,7 +45,7 @@ export function SocialLoginButtons() {
               <Button
                 type="submit"
                 variant="outline"
-                className="w-full flex items-center justify-center gap-2"
+                className="flex w-full items-center justify-center gap-2"
               >
                 <FaGoogle className="h-5 w-5" />
                 <span>Continue with Google</span>
@@ -59,9 +61,7 @@ export function SocialLoginButtons() {
             <div className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or
-            </span>
+            <span className="bg-background text-muted-foreground px-2">Or</span>
           </div>
         </div>
       )}
@@ -77,7 +77,7 @@ export function SocialLoginButtons() {
           <Button
             type="submit"
             variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+            className="flex w-full items-center justify-center gap-2"
           >
             <MdEmail className="h-5 w-5" />
             <span>Continue with Email</span>
@@ -86,4 +86,4 @@ export function SocialLoginButtons() {
       )}
     </div>
   )
-} 
+}

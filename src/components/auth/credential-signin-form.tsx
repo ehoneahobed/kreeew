@@ -1,49 +1,115 @@
 "use client"
 
-import { useFormState, useFormStatus } from "react-dom"
-import { signInWithCredentials } from "@/lib/auth/actions"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
 import Link from "next/link"
-import { PasswordInput } from "../ui/password-input"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { signIn } from "next-auth/react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
-export function CredentialSignInForm() {
-    const [errorMessage, dispatch] = useFormState(signInWithCredentials, undefined)
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 
-    return (
-        <form action={dispatch} className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input type="email" id="email" name="email" placeholder="name@example.com" required />
-            </div>
+import { signInSchema } from "@/lib/validations/auth.schema"
+import type { SignInFormData } from "@/lib/validations/auth.schema"
 
-            <div className="space-y-2">
-                <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <Link
-                        href="/auth/forgot-password"
-                        className="ml-auto text-xs text-red-500 hover:underline"
-                    >
-                        Forgot your password?
-                    </Link>
-                </div>
-                <PasswordInput id="password" name="password" required />
-            </div>
+export function CredentialSignInForm({
+  callbackUrl,
+}: {
+  callbackUrl?: string | null
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
 
-            {errorMessage && <p className="text-red-500 text-sm">{errorMessage}</p>}
+  const form = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
 
-            <LoginButton />
-        </form>
-    )
-}
+  async function onSubmit(data: SignInFormData) {
+    setIsSubmitting(true)
 
-function LoginButton() {
-    const { pending } = useFormStatus()
+    try {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
 
-    return (
-        <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Signing In..." : "Sign In"}
+      if (result?.error) {
+        toast.error("Invalid email or password")
+      } else {
+        toast.success("Successfully signed in!")
+        router.push(callbackUrl || "/portal")
+      }
+    } catch (_error) {
+      toast.error("An unexpected error occurred")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="name@example.com"
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center">
+                <FormLabel>Password</FormLabel>
+                <Link
+                  href="/auth/forgot-password"
+                  className="ml-auto text-xs text-red-500 hover:underline"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+              <FormControl>
+                <PasswordInput {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Signing In..." : "Sign In"}
         </Button>
-    )
-} 
+      </form>
+    </Form>
+  )
+}
