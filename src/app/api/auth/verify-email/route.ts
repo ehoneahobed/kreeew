@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { auth } from "@/lib/auth/auth"
 import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import { saltAndHash } from "@/lib/utils"
 
 export async function PATCH(request: NextRequest) {
   const token = new URL(request.url).searchParams.get("token")
@@ -18,9 +19,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 })
   }
 
-  const existingToken = await prisma.verificationToken.findUnique({
+  const hashedToken = await saltAndHash(token)
+
+  const existingToken = await prisma.verificationToken.findFirst({
     where: {
-      identifier_token: { identifier: session.user.email, token },
+      identifier: session.user.email,
+      token: hashedToken,
       expires: { gt: new Date() },
     },
     select: { identifier: true, token: true },
