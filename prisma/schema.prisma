@@ -25,6 +25,13 @@ model User {
   sessions      Session[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
+
+   // Subscription Management
+  stripeCustomerId      String? @unique
+  stripeSubscriptionId  String? @unique
+  planName              String  @default("free") // free, starter, pro
+  subscriptionStatus    String? // active, canceled, past_due, etc.
+ 
  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
