@@ -1,8 +1,10 @@
 "use client"
 
+import { ThemeProvider } from "@/providers/theme-provider"
 import { SessionProvider } from "next-auth/react"
 import { SWRConfig } from "swr"
-import { ThemeProvider } from "@/providers/theme-provider"
+
+import { Toaster } from "@/components/ui/sonner"
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -11,11 +13,11 @@ interface ProvidersProps {
 export function AppProviders({ children }: ProvidersProps) {
   return (
     <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
       <SessionProvider>
         <SWRConfig
           value={{
@@ -28,8 +30,9 @@ export function AppProviders({ children }: ProvidersProps) {
           }}
         >
           {children}
+          <Toaster />
         </SWRConfig>
       </SessionProvider>
     </ThemeProvider>
   )
-} 
+}
