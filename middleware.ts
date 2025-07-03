@@ -1,24 +1,52 @@
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth/auth"
+import { getSafeRedirectUrl } from "@/lib/redirect"
 
-// TODO: Add more public routes or update as needed
-const PUBLIC_ROUTES = ["/auth/signin", "/auth/signup", "/auth/reset-password"]
-const AUTH_ROUTES = ["/auth/signin", "/auth/signup", "/auth/reset-password"]
-const API_AUTH_PREFIX = ["/api/auth"]
+const ROUTE_CONFIG = {
+  protected: [{ exact: false, path: "/portal" }],
+  auth: [
+    { exact: true, path: "/auth/signin" },
+    { exact: true, path: "/auth/signup" },
+    { exact: true, path: "/auth/forgot-password" },
+    { exact: true, path: "/auth/reset-password" },
+  ],
+  api: [{ exact: false, path: "/api/contact" }],
+  defaultRedirect: "/portal",
+  loginPath: "/auth/signin",
+} as const
+
+function isRouteMatch(
+  pathname: string,
+  routes: readonly { exact: boolean; path: string }[]
+) {
+  return routes.some((route) => {
+    if (route.exact) {
+      return pathname === route.path
+    }
+    return pathname.startsWith(route.path)
+  })
+}
+
+function buildRedirectUrl(base: string, redirectPath: string, nextUrl: URL) {
+  const safePath = getSafeRedirectUrl(
+    redirectPath,
+    ROUTE_CONFIG.defaultRedirect
+  )
+
+  const redirectParam = `?callbackUrl=${encodeURIComponent(safePath)}`
+  return new URL(base + redirectParam, nextUrl)
+}
 
 export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
-  const isAuthRoute = AUTH_ROUTES.some((route) =>
-    nextUrl.pathname.startsWith(route)
+  const isApiAuthRoute = isRouteMatch(nextUrl.pathname, ROUTE_CONFIG.api)
+  const isProtectedRoute = isRouteMatch(
+    nextUrl.pathname,
+    ROUTE_CONFIG.protected
   )
-  const isPublicRoute = PUBLIC_ROUTES.some((route) =>
-    nextUrl.pathname.startsWith(route)
-  )
-  const isApiAuthRoute = API_AUTH_PREFIX.some((prefix) =>
-    nextUrl.pathname.startsWith(prefix)
-  )
+  const isAuthRoute = isRouteMatch(nextUrl.pathname, ROUTE_CONFIG.auth)
 
   if (isApiAuthRoute) {
     return NextResponse.next()
@@ -26,23 +54,26 @@ export default auth((req) => {
 
   if (isAuthRoute) {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/portal", nextUrl))
+      return NextResponse.redirect(
+        new URL(ROUTE_CONFIG.defaultRedirect, nextUrl)
+      )
     }
     return NextResponse.next()
   }
 
-  if (!isPublicRoute && !isLoggedIn) {
+  if (isProtectedRoute && !isLoggedIn) {
     let callbackUrl = nextUrl.pathname
     if (nextUrl.search) {
       callbackUrl += nextUrl.search
     }
 
-    return NextResponse.redirect(
-      new URL(
-        `/auth/signin?callbackUrl=${encodeURIComponent(callbackUrl)}`,
-        nextUrl
-      )
+    const loginRedirectUrl = buildRedirectUrl(
+      ROUTE_CONFIG.loginPath,
+      callbackUrl,
+      nextUrl
     )
+
+    return NextResponse.redirect(loginRedirectUrl)
   }
 
   return NextResponse.next()
