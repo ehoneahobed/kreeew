@@ -18,7 +18,7 @@ export async function PATCH(request: NextRequest) {
   const { success, error, data } = changePasswordSchema.safeParse(body)
 
   if (!success) {
-    logger.error(error.message, "Invalid request body")
+    logger.error(error.message)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
