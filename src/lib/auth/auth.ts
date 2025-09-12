@@ -13,13 +13,10 @@ import { sendEmail } from "@/lib/send-email"
 import { verifyPassword } from "@/lib/utils"
 import { signInSchema } from "@/lib/validations/auth.schema"
 
-declare module "next-auth" {
+declare module "@auth/core/jwt" {
   interface User {
     id: string
   }
-}
-
-declare module "@auth/core/jwt" {
   interface JWT {
     id: string
   }
@@ -159,7 +156,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       })
 
       if (!dbUser) {
-        if (user) {
+        if (user?.id) {
           token.id = user.id
         }
         return token

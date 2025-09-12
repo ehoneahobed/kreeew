@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
-import { saltAndHash } from "@/lib/utils"
+import { saltAndHash, verifyToken } from "@/lib/utils"
 import { resetPasswordSchema } from "@/lib/validations/auth.schema"
 
 export async function PATCH(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function PATCH(request: NextRequest) {
   const { success, error, data } = resetPasswordSchema.safeParse(body)
 
   if (!success) {
-    logger.error(error.message, "Invalid request body")
+    logger.error(error.message)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
@@ -32,23 +32,23 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const existingToken = await prisma.passwordResetToken.findUnique({
-      where: { token, expires: { gt: new Date() } },
-      select: { email: true, token: true },
-    })
+    const { valid, expired, decoded } = verifyToken(token)
 
-    if (!existingToken) {
-      logger.error("Invalid token")
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 })
+    if (!valid) {
+      const message = expired ? "Token expired" : "Invalid token"
+      logger.error(message)
+      return NextResponse.json({ error: message }, { status: 400 })
     }
 
+    const { email } = decoded as { email: string }
+
     const user = await prisma.user.findUnique({
-      where: { email: existingToken.email },
+      where: { email },
       select: { email: true },
     })
 
     if (!user) {
-      logger.error("User not found")
+      logger.error("User not found with this email")
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
@@ -57,10 +57,6 @@ export async function PATCH(request: NextRequest) {
     await prisma.user.update({
       where: { email: user.email },
       data: { password: hashedPassword, updatedAt: new Date() },
-    })
-
-    await prisma.passwordResetToken.delete({
-      where: { token: existingToken.token, email: existingToken.email },
     })
 
     logger.info("Password reset successful")

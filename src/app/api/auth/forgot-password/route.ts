@@ -1,9 +1,10 @@
-import crypto from "crypto"
 import { NextResponse, type NextRequest } from "next/server"
 
-import { sendPasswordResetEmail } from "@/lib/email-templates/send-password-reset-email"
+import { PasswordResetEmail } from "@/lib/email-templates/password-reset-email"
 import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import { sendEmail } from "@/lib/send-email"
+import { generateToken } from "@/lib/utils"
 import { forgotPasswordSchema } from "@/lib/validations/auth.schema"
 
 export async function POST(request: NextRequest) {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
   const { success, error, data } = forgotPasswordSchema.safeParse(body)
 
   if (!success) {
-    logger.error(error.message, "Invalid request body")
+    logger.error(error.message)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
@@ -30,18 +31,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const passwordResetToken = await prisma.passwordResetToken.create({
-      data: {
-        email,
-        token: crypto.randomBytes(32).toString("hex"),
-        expires: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
-      },
+    const token = generateToken({ email }, "1h") // 1 hour
+
+    const { error } = await sendEmail({
+      to: email,
+      subject: "Reset your password",
+      react: PasswordResetEmail({
+        resetLink: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${token}`,
+      }),
     })
 
-    await sendPasswordResetEmail({
-      email: passwordResetToken.email,
-      token: passwordResetToken.token,
-    })
+    if (error) {
+      logger.error(error, "Failed to send password reset email")
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
     logger.info("Password reset email sent successfully")
     return NextResponse.json(
