@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   const { success, error, data } = signUpSchema.safeParse(body)
 
   if (!success) {
-    logger.error(error.message, "Invalid request body")
+    logger.error(error.message)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
