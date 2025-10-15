@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { issueEmailVerificationToken } from "@/lib/auth/verification-tokens"
+import {
+  hashVerificationToken,
+  issueEmailVerificationToken,
+} from "@/lib/auth/verification-tokens"
 import VerificationEmail from "@/lib/email-templates/verification-email"
 import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -59,7 +62,12 @@ export async function POST(request: NextRequest) {
       logger.error(error, "Failed to send verification email")
       try {
         await prisma.verificationToken.delete({
-          where: { identifier_token: { identifier: email, token } },
+          where: {
+            identifier_token: {
+              identifier: email,
+              token: hashVerificationToken(token),
+            },
+          },
         })
       } catch (cleanupError) {
         logger.error(cleanupError, "Failed to clean up verification token")

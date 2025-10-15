@@ -1,3 +1,5 @@
+import { createHash } from "crypto"
+
 import { prisma } from "@/lib/prisma"
 import { generateToken, verifyToken } from "@/lib/utils"
 
@@ -31,6 +33,10 @@ function resolveDeps(overrides?: Partial<VerificationTokenDeps>): VerificationTo
   return { ...defaultDeps, ...overrides }
 }
 
+export function hashVerificationToken(token: string) {
+  return createHash("sha256").update(token).digest("hex")
+}
+
 export async function issueEmailVerificationToken(
   email: string,
   overrides?: Partial<VerificationTokenDeps>
@@ -39,18 +45,19 @@ export async function issueEmailVerificationToken(
 
   const token = tokenGenerator({ email }, "24h")
   const expires = new Date(now() + VERIFICATION_TOKEN_EXPIRATION_MS)
+  const tokenHash = hashVerificationToken(token)
 
   await prismaClient.verificationToken.deleteMany({ where: { identifier: email } })
 
   const record = await prismaClient.verificationToken.create({
     data: {
       identifier: email,
-      token,
+      token: tokenHash,
       expires,
     },
   })
 
-  return { token: record.token, expires: record.expires }
+  return { token, expires: record.expires }
 }
 
 function assertEmailFromDecoded(decoded: unknown): string {
@@ -74,10 +81,11 @@ export async function consumeEmailVerificationToken(
   const { prismaClient, tokenVerifier, now } = resolveDeps(overrides)
 
   const { valid, expired, decoded } = tokenVerifier(token)
+  const tokenHash = hashVerificationToken(token)
 
   if (!valid) {
     if (expired) {
-      await prismaClient.verificationToken.deleteMany({ where: { token } })
+      await prismaClient.verificationToken.deleteMany({ where: { token: tokenHash } })
       throw new VerificationTokenError("Token expired", 400)
     }
 
@@ -87,7 +95,7 @@ export async function consumeEmailVerificationToken(
   const email = assertEmailFromDecoded(decoded)
 
   const verificationRecord = await prismaClient.verificationToken.findUnique({
-    where: { identifier_token: { identifier: email, token } },
+    where: { identifier_token: { identifier: email, token: tokenHash } },
   })
 
   if (!verificationRecord) {
@@ -96,7 +104,7 @@ export async function consumeEmailVerificationToken(
 
   if (verificationRecord.expires.getTime() <= now()) {
     await prismaClient.verificationToken.delete({
-      where: { identifier_token: { identifier: email, token } },
+      where: { identifier_token: { identifier: email, token: tokenHash } },
     })
     throw new VerificationTokenError("Token expired", 400)
   }
@@ -105,7 +113,7 @@ export async function consumeEmailVerificationToken(
 
   if (!user) {
     await prismaClient.verificationToken.delete({
-      where: { identifier_token: { identifier: email, token } },
+      where: { identifier_token: { identifier: email, token: tokenHash } },
     })
     throw new VerificationTokenError("User not found", 404)
   }
@@ -119,7 +127,7 @@ export async function consumeEmailVerificationToken(
       },
     }),
     prismaClient.verificationToken.delete({
-      where: { identifier_token: { identifier: email, token } },
+      where: { identifier_token: { identifier: email, token: tokenHash } },
     }),
   ])
 

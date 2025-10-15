@@ -6,6 +6,7 @@ const {
   VERIFICATION_TOKEN_EXPIRATION_MS,
   consumeEmailVerificationToken,
   issueEmailVerificationToken,
+  hashVerificationToken,
 } = await import("../src/lib/auth/verification-tokens")
 
 type PrismaCallState = {
@@ -96,20 +97,22 @@ beforeEach(() => {
 })
 
 describe("issueEmailVerificationToken", () => {
-  test("replaces existing tokens with a new JWT", async () => {
+  test("replaces existing tokens with a new JWT and stores the hash", async () => {
     const now = new Date("2024-01-01T00:00:00Z").getTime()
     const email = "test@example.com"
     const expectedExpiry = new Date(now + VERIFICATION_TOKEN_EXPIRATION_MS)
+    const token = "mock-jwt"
+    const tokenHash = hashVerificationToken(token)
 
     prismaMock.state.createReturnValue = {
       identifier: email,
-      token: "mock-jwt",
+      token: tokenHash,
       expires: expectedExpiry,
     }
 
     const result = await issueEmailVerificationToken(email, {
       prismaClient: prismaMock.prisma,
-      tokenGenerator: (_options, _expiresIn) => "mock-jwt",
+      tokenGenerator: (_options, _expiresIn) => token,
       now: () => now,
     })
 
@@ -120,12 +123,12 @@ describe("issueEmailVerificationToken", () => {
       {
         data: {
           identifier: email,
-          token: "mock-jwt",
+          token: tokenHash,
           expires: expectedExpiry,
         },
       },
     ])
-    expect(result).toEqual({ token: "mock-jwt", expires: expectedExpiry })
+    expect(result).toEqual({ token, expires: expectedExpiry })
   })
 })
 
@@ -133,12 +136,13 @@ describe("consumeEmailVerificationToken", () => {
   test("verifies the token, updates the user, and removes the record", async () => {
     const email = "verified@example.com"
     const token = "valid-token"
+    const tokenHash = hashVerificationToken(token)
     const now = new Date("2024-01-01T12:00:00Z").getTime()
     const futureDate = new Date(now + 1000)
 
     prismaMock.state.findUniqueReturnValue = {
       identifier: email,
-      token,
+      token: tokenHash,
       expires: futureDate,
     }
     prismaMock.state.userFindUniqueReturnValue = { id: "user-1", email }
@@ -150,7 +154,11 @@ describe("consumeEmailVerificationToken", () => {
     })
 
     expect(prismaMock.state.findUnique).toEqual([
-      { where: { identifier_token: { identifier: email, token } } },
+      {
+        where: {
+          identifier_token: { identifier: email, token: tokenHash },
+        },
+      },
     ])
     expect(prismaMock.state.userFindUnique).toEqual([
       { where: { email } },
@@ -160,7 +168,11 @@ describe("consumeEmailVerificationToken", () => {
       where: { email },
     })
     expect(prismaMock.state.delete).toEqual([
-      { where: { identifier_token: { identifier: email, token } } },
+      {
+        where: {
+          identifier_token: { identifier: email, token: tokenHash },
+        },
+      },
     ])
     expect(result).toEqual({ email })
   })
@@ -177,6 +189,7 @@ describe("consumeEmailVerificationToken", () => {
 
   test("removes persisted tokens when the JWT has expired", async () => {
     const token = "expired"
+    const tokenHash = hashVerificationToken(token)
 
     await expect(
       consumeEmailVerificationToken(token, {
@@ -186,18 +199,21 @@ describe("consumeEmailVerificationToken", () => {
       })
     ).rejects.toMatchObject({ message: "Token expired", status: 400 })
 
-    expect(prismaMock.state.deleteMany).toEqual([{ where: { token } }])
+    expect(prismaMock.state.deleteMany).toEqual([
+      { where: { token: tokenHash } },
+    ])
   })
 
   test("cleans up and rejects expired database tokens", async () => {
     const email = "expired@example.com"
     const token = "expired-token"
+    const tokenHash = hashVerificationToken(token)
     const now = new Date("2024-01-02T00:00:00Z").getTime()
     const expiredDate = new Date(now - 1000)
 
     prismaMock.state.findUniqueReturnValue = {
       identifier: email,
-      token,
+      token: tokenHash,
       expires: expiredDate,
     }
 
@@ -210,7 +226,11 @@ describe("consumeEmailVerificationToken", () => {
     ).rejects.toMatchObject({ message: "Token expired", status: 400 })
 
     expect(prismaMock.state.delete).toEqual([
-      { where: { identifier_token: { identifier: email, token } } },
+      {
+        where: {
+          identifier_token: { identifier: email, token: tokenHash },
+        },
+      },
     ])
     expect(prismaMock.state.transactions).toHaveLength(0)
   })
@@ -218,12 +238,13 @@ describe("consumeEmailVerificationToken", () => {
   test("removes the token when the user no longer exists", async () => {
     const email = "missing@example.com"
     const token = "missing-token"
+    const tokenHash = hashVerificationToken(token)
     const now = Date.now()
     const futureDate = new Date(now + 1000)
 
     prismaMock.state.findUniqueReturnValue = {
       identifier: email,
-      token,
+      token: tokenHash,
       expires: futureDate,
     }
     prismaMock.state.userFindUniqueReturnValue = null
@@ -237,7 +258,11 @@ describe("consumeEmailVerificationToken", () => {
     ).rejects.toMatchObject({ message: "User not found", status: 404 })
 
     expect(prismaMock.state.delete).toEqual([
-      { where: { identifier_token: { identifier: email, token } } },
+      {
+        where: {
+          identifier_token: { identifier: email, token: tokenHash },
+        },
+      },
     ])
   })
 })
