@@ -1,11 +1,14 @@
 import * as React from "react"
 import { Resend } from "resend"
 
-const EMAIL_FROM = process.env.EMAIL_FROM
+const SENDER_EMAIL_ADDRESS =
+  process.env.SENDER_EMAIL_ADDRESS ?? process.env.EMAIL_FROM
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 
-if (!EMAIL_FROM) {
-  throw new Error("EMAIL_FROM must be set")
+if (!SENDER_EMAIL_ADDRESS) {
+  throw new Error(
+    "SENDER_EMAIL_ADDRESS must be set (or EMAIL_FROM for backward compatibility)"
+  )
 }
 
 if (!RESEND_API_KEY) {
@@ -33,7 +36,7 @@ export async function sendEmail({
 }: SendEmailProps) {
   const data = await resend.emails.send({
     // Sender email address. To include a friendly name, use the format "Your Name <sender@domain.com>"
-    from: from ?? EMAIL_FROM!,
+    from: from ?? SENDER_EMAIL_ADDRESS!,
     to,
     replyTo,
     subject,
