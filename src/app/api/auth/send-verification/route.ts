@@ -1,60 +1,11 @@
-import crypto from "crypto"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/lib/auth/auth"
+import { issueEmailVerificationToken } from "@/lib/auth/verification-tokens"
 import VerificationEmail from "@/lib/email-templates/verification-email"
 import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { sendEmail } from "@/lib/send-email"
-import { saltAndHash } from "@/lib/utils"
-
-async function handleSendVerificationEmail(
-  email: string,
-  mode: "resend" | "send"
-) {
-  const token = crypto.randomBytes(32).toString("hex")
-  const hashedToken = await saltAndHash(token)
-  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24) // 24 hours
-
-  if (mode === "resend") {
-    await prisma.verificationToken.update({
-      where: { identifier_token: { identifier: email, token: hashedToken } },
-      data: { token: hashedToken, expires },
-    })
-  } else {
-    await prisma.verificationToken.create({
-      data: {
-        identifier: email,
-        token: hashedToken,
-        expires,
-      },
-    })
-  }
-
-  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${token}`
-
-  const { error } = await sendEmail({
-    to: email,
-    subject: "Verify your email",
-    react: VerificationEmail({
-      verificationUrl,
-      unsubscribeUrl: "#",
-    }),
-  })
-
-  if (error) {
-    logger.error(error, "Failed to send verification email")
-    return {
-      success: false,
-      error: error.message,
-    }
-  }
-
-  return {
-    success: true,
-    message: "Verification email sent",
-  }
-}
 
 export async function POST() {
   const session = await auth()
@@ -85,41 +36,46 @@ export async function POST() {
       )
     }
 
-    const existingToken = await prisma.verificationToken.findFirst({
-      where: { identifier: email, expires: { gt: new Date() } },
-      select: { identifier: true, token: true },
-    })
+    try {
+      const { token } = await issueEmailVerificationToken(email)
+      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${token}`
 
-    if (existingToken) {
-      logger.error("Verification token already exists")
+      const { error } = await sendEmail({
+        to: email,
+        subject: "Verify your email",
+        react: VerificationEmail({
+          verificationUrl,
+          unsubscribeUrl: "#",
+        }),
+      })
 
-      const { success, message, error } = await handleSendVerificationEmail(
-        email,
-        "resend"
-      )
-
-      if (!success) {
+      if (error) {
         logger.error(error, "Failed to send verification email")
-        return NextResponse.json({ error }, { status: 500 })
+        try {
+          await prisma.verificationToken.delete({
+            where: { identifier_token: { identifier: email, token } },
+          })
+        } catch (cleanupError) {
+          logger.error(cleanupError, "Failed to clean up verification token")
+        }
+
+        return NextResponse.json(
+          { error: "Failed to send verification email" },
+          { status: 500 }
+        )
       }
 
-      return NextResponse.json({ message }, { status: 200 })
-    }
-
-    const { success, message, error } = await handleSendVerificationEmail(
-      email,
-      "send"
-    )
-
-    if (!success) {
-      logger.error(error, "Failed to send verification email")
       return NextResponse.json(
-        { error: "Failed to send verification email" },
+        { message: "Verification email sent" },
+        { status: 200 }
+      )
+    } catch (error) {
+      logger.error(error, "Failed to create verification token")
+      return NextResponse.json(
+        { error: "Failed to create verification token" },
         { status: 500 }
       )
     }
-
-    return NextResponse.json({ message }, { status: 200 })
   } catch (error) {
     logger.error(error, "Failed to send verification email")
     return NextResponse.json(

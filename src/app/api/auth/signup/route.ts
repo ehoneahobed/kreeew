@@ -1,6 +1,6 @@
-import crypto from "crypto"
 import { NextResponse, type NextRequest } from "next/server"
 
+import { issueEmailVerificationToken } from "@/lib/auth/verification-tokens"
 import VerificationEmail from "@/lib/email-templates/verification-email"
 import { logger } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -43,17 +43,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const token = crypto.randomBytes(32).toString("hex")
-    const hashedToken = await saltAndHash(token)
-
-    await prisma.verificationToken.create({
-      data: {
-        identifier: email,
-        token: hashedToken,
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hours
-      },
-    })
-
+    const { token } = await issueEmailVerificationToken(email)
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?token=${token}`
 
     const { error } = await sendEmail({
@@ -67,6 +57,13 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       logger.error(error, "Failed to send verification email")
+      try {
+        await prisma.verificationToken.delete({
+          where: { identifier_token: { identifier: email, token } },
+        })
+      } catch (cleanupError) {
+        logger.error(cleanupError, "Failed to clean up verification token")
+      }
       return NextResponse.json(
         { error: "Failed to send verification email" },
         { status: 500 }
