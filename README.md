@@ -40,7 +40,7 @@ NEXTAUTH_URL="http://localhost:4001"
 
 # Email (Resend)
 RESEND_API_KEY="your-resend-api-key"
-SENDER_EMAIL_ADDRESS="your-verified-email"
+SENDER_EMAIL_ADDRESS="your-verified-email" # Falls back to EMAIL_FROM if defined
 
 # OAuth Providers
 AUTH_GITHUB_CLIENT_ID="your-github-client-id"
