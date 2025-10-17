@@ -31,13 +31,13 @@ export const PasswordResetEmail = ({
                     src={`${baseUrl}/static/logo.png`}
                     width="40"
                     height="33"
-                    alt="Auth Boilerplate"
+                    alt="Kreeew"
                 />
                 <Heading style={heading}>Reset your password</Heading>
                 <Section>
                     <Text style={text}>
                         Someone recently requested a password change for your
-                        Auth Boilerplate account. If this was you, you can set
+                        Kreeew account. If this was you, you can set
                         a new password here:
                     </Text>
                     <Button style={button} href={resetLink}>
@@ -58,7 +58,7 @@ export const PasswordResetEmail = ({
                     href="https://github.com/Lord-of-the-files/authjs-repo"
                     style={reportLink}
                 >
-                    Auth Boilerplate
+                    Kreeew
                 </Link>
             </Container>
         </Body>

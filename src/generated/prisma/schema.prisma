@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -15,19 +9,31 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  // Optional for WebAuthn support
-  Authenticator Authenticator[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String              @id @default(cuid())
+  name                 String?
+  email                String              @unique
+  emailVerified        DateTime?
+  password             String?
+  image                String?
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
+  planName             String              @default("free")
+  subscriptionStatus   String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  archivedAt           DateTime?
+  role                 UserRole            @default(SUBSCRIBER)
+  aiUsage              AIUsage[]
+  accounts             Account[]
+  Authenticator        Authenticator[]
+  bookmarks            Bookmark[]
+  comments             Comment[]
+  courseEnrollments    CourseEnrollment[]
+  courseWishlist       CourseWishlist[]
+  publications         Publication[]
+  sessions             Session[]
+  subscriberContacts   SubscriberContact[]
+  subscriptions        Subscription[]
 }
 
 model Account {
@@ -42,11 +48,9 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
 }
@@ -55,10 +59,9 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -78,7 +81,6 @@ model PasswordResetToken {
   @@unique([email, token])
 }
 
-// Optional for WebAuthn support
 model Authenticator {
   credentialID         String  @unique
   userId               String
@@ -88,8 +90,387 @@ model Authenticator {
   credentialDeviceType String
   credentialBackedUp   Boolean
   transports           String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
+}
+
+model Publication {
+  id                  String               @id @default(cuid())
+  userId              String
+  name                String
+  slug                String               @unique
+  description         String?
+  logo                String?
+  domain              String?              @unique
+  themeColors         Json?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  analytics           Analytics[]
+  automationWorkflows AutomationWorkflow[]
+  courses             Course[]
+  emailCampaigns      EmailCampaign[]
+  emailTemplates      EmailTemplate[]
+  posts               Post[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriberContacts  SubscriberContact[]
+  subscriberTags      SubscriberTag[]
+  subscriptions       Subscription[]
+  subscriptionTiers   SubscriptionTier[]
+}
+
+model Post {
+  id             String      @id @default(cuid())
+  publicationId  String
+  title          String
+  content        String
+  excerpt        String?
+  slug           String
+  status         PostStatus  @default(DRAFT)
+  publishedAt    DateTime?
+  isPaid         Boolean     @default(false)
+  featuredImage  String?
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  analytics      Analytics[]
+  bookmarks      Bookmark[]
+  comments       Comment[]
+  publication    Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, slug])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String
+  publicationId        String
+  tier                 String             @default("free")
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeSubscriptionId String?
+  stripeCustomerId     String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  publication          Publication        @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, publicationId])
+}
+
+model SubscriptionTier {
+  id            String      @id @default(cuid())
+  publicationId String
+  name          String
+  description   String?
+  price         Int
+  features      Json?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id              String             @id @default(cuid())
+  publicationId   String
+  title           String
+  description     String?
+  price           Int
+  status          CourseStatus       @default(DRAFT)
+  enrollmentCount Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  publication     Publication        @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  enrollments     CourseEnrollment[]
+  lessons         CourseLesson[]
+  wishlist        CourseWishlist[]
+}
+
+model CourseLesson {
+  id            String    @id @default(cuid())
+  courseId      String
+  title         String
+  content       String
+  order         Int
+  isPublished   Boolean   @default(false)
+  scheduledFor  DateTime?
+  sentAt        DateTime?
+  deliveryDelay Int       @default(1)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  emailLogs EmailLog[]
+}
+
+model CourseEnrollment {
+  id                    String           @id @default(cuid())
+  userId                String
+  courseId              String
+  status                EnrollmentStatus @default(ACTIVE)
+  currentLesson         Int              @default(0)
+  enrolledAt            DateTime         @default(now())
+  completedAt           DateTime?
+  stripePaymentIntentId String?
+  course                Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model CourseWishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  // Relations
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model EmailCampaign {
+  id            String         @id @default(cuid())
+  publicationId String
+  name          String
+  type          CampaignType
+  status        CampaignStatus @default(DRAFT)
+  scheduledAt   DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  content       String
+  metadata      Json?
+  subject       String
+  publication   Publication    @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  emailLogs     EmailLog[]
+}
+
+model EmailTemplate {
+  id            String      @id @default(cuid())
+  publicationId String
+  name          String
+  subject       String
+  htmlContent   String
+  variables     Json?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+}
+
+model AutomationWorkflow {
+  id            String           @id @default(cuid())
+  publicationId String
+  name          String
+  trigger       String
+  status        WorkflowStatus   @default(ACTIVE)
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  steps         AutomationStep[]
+  publication   Publication      @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+}
+
+model AutomationStep {
+  id           String             @id @default(cuid())
+  workflowId   String
+  type         String
+  config       Json
+  order        Int
+  delayMinutes Int                @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  workflow     AutomationWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+}
+
+model SubscriberTag {
+  id            String      @id @default(cuid())
+  publicationId String
+  name          String
+  color         String      @default("#6366F1")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, name])
+}
+
+model SubscriberContact {
+  id             String      @id @default(cuid())
+  publicationId  String
+  userId         String?
+  email          String
+  tags           String[]
+  customFields   Json?
+  preferences    Json?
+  isActive       Boolean     @default(true)
+  subscribedAt   DateTime    @default(now())
+  unsubscribedAt DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  emailLogs      EmailLog[]
+  publication    Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  user           User?       @relation(fields: [userId], references: [id])
+
+  @@unique([publicationId, email])
+}
+
+model EmailLog {
+  id             String      @id @default(cuid())
+  contactId      String
+  campaignId     String?
+  courseLessonId String?
+  status         EmailStatus @default(PENDING)
+  sentAt         DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  bouncedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  errorMessage   String?
+
+  // Relations
+  campaign     EmailCampaign?    @relation(fields: [campaignId], references: [id])
+  courseLesson CourseLesson?     @relation(fields: [courseLessonId], references: [id])
+  contact      SubscriberContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+}
+
+model EmailQueue {
+  id            String      @id @default(cuid())
+  contactId     String
+  templateId    String?
+  scheduledFor  DateTime
+  status        QueueStatus @default(PENDING)
+  retryCount    Int         @default(0)
+  lastAttemptAt DateTime?
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String
+  userId    String
+  content   String
+  parentId  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+model Analytics {
+  id            String      @id @default(cuid())
+  publicationId String
+  postId        String?
+  views         Int         @default(0)
+  reads         Int         @default(0)
+  engagement    Float       @default(0.0)
+  date          DateTime    @default(now())
+  createdAt     DateTime    @default(now())
+  post          Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([publicationId, postId, date])
+}
+
+model AIUsage {
+  id         String   @id @default(cuid())
+  userId     String
+  feature    String
+  tokensUsed Int
+  cost       Float    @default(0.0)
+  date       DateTime @default(now())
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  SUBSCRIBER
+  CREATOR
+  ADMIN
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  INCOMPLETE
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignType {
+  NEWSLETTER
+  DRIP
+  COURSE
+  AUTOMATION
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  FAILED
+}
+
+enum WorkflowStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+enum QueueStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }

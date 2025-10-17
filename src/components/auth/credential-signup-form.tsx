@@ -53,6 +53,7 @@ export function CredentialSignUpForm() {
           email: data.email,
           password: data.password,
           confirmPassword: data.confirmPassword,
+          terms: data.terms,
         }),
       })
 

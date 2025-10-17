@@ -5,13 +5,28 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 
 const {
+  PrismaClientKnownRequestError,
+  PrismaClientUnknownRequestError,
+  PrismaClientRustPanicError,
+  PrismaClientInitializationError,
+  PrismaClientValidationError,
+  getPrismaClient,
+  sqltag,
+  empty,
+  join,
+  raw,
+  skip,
   Decimal,
+  Debug,
   objectEnumValues,
   makeStrictEnum,
+  Extensions,
+  warnOnce,
+  defineDmmfProperty,
   Public,
   getRuntime,
-  skip
-} = require('./runtime/index-browser.js')
+  createParam,
+} = require('./runtime/wasm-engine-edge.js')
 
 
 const Prisma = {}
@@ -20,79 +35,35 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.7.0
- * Query Engine version: 3cff47a7f5d65c3ea74883f1d736e41d68ce91ed
+ * Prisma Client JS version: 6.16.1
+ * Query Engine version: 1c57fdcd7e44b29b9313256c76699e91c3ac3c43
  */
 Prisma.prismaVersion = {
-  client: "6.7.0",
-  engine: "3cff47a7f5d65c3ea74883f1d736e41d68ce91ed"
+  client: "6.16.1",
+  engine: "1c57fdcd7e44b29b9313256c76699e91c3ac3c43"
 }
 
-Prisma.PrismaClientKnownRequestError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientKnownRequestError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)};
-Prisma.PrismaClientUnknownRequestError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientUnknownRequestError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.PrismaClientRustPanicError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientRustPanicError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.PrismaClientInitializationError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientInitializationError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.PrismaClientValidationError = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`PrismaClientValidationError is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
+Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
+Prisma.PrismaClientUnknownRequestError = PrismaClientUnknownRequestError
+Prisma.PrismaClientRustPanicError = PrismaClientRustPanicError
+Prisma.PrismaClientInitializationError = PrismaClientInitializationError
+Prisma.PrismaClientValidationError = PrismaClientValidationError
 Prisma.Decimal = Decimal
 
 /**
  * Re-export of sql-template-tag
  */
-Prisma.sql = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`sqltag is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.empty = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`empty is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.join = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`join is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.raw = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`raw is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
+Prisma.sql = sqltag
+Prisma.empty = empty
+Prisma.join = join
+Prisma.raw = raw
 Prisma.validator = Public.validator
 
 /**
 * Extensions
 */
-Prisma.getExtensionContext = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`Extensions.getExtensionContext is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
-Prisma.defineExtension = () => {
-  const runtimeName = getRuntime().prettyName;
-  throw new Error(`Extensions.defineExtension is unable to run in this browser environment, or has been bundled for the browser (running in ${runtimeName}).
-In case this error is unexpected for you, please report it in https://pris.ly/prisma-prisma-bug-report`,
-)}
+Prisma.getExtensionContext = Extensions.getExtensionContext
+Prisma.defineExtension = Extensions.defineExtension
 
 /**
  * Shorthand utilities for JSON filtering
@@ -109,10 +80,11 @@ Prisma.NullTypes = {
 
 
 
+
+
 /**
  * Enums
  */
-
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   ReadUncommitted: 'ReadUncommitted',
   ReadCommitted: 'ReadCommitted',
@@ -127,8 +99,14 @@ exports.Prisma.UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   password: 'password',
   image: 'image',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  planName: 'planName',
+  subscriptionStatus: 'subscriptionStatus',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  archivedAt: 'archivedAt',
+  role: 'role'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -179,9 +157,255 @@ exports.Prisma.AuthenticatorScalarFieldEnum = {
   transports: 'transports'
 };
 
+exports.Prisma.PublicationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  slug: 'slug',
+  description: 'description',
+  logo: 'logo',
+  domain: 'domain',
+  themeColors: 'themeColors',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PostScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  title: 'title',
+  content: 'content',
+  excerpt: 'excerpt',
+  slug: 'slug',
+  status: 'status',
+  publishedAt: 'publishedAt',
+  isPaid: 'isPaid',
+  featuredImage: 'featuredImage',
+  seoTitle: 'seoTitle',
+  seoDescription: 'seoDescription',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  publicationId: 'publicationId',
+  tier: 'tier',
+  status: 'status',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  stripeCustomerId: 'stripeCustomerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriptionTierScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  description: 'description',
+  price: 'price',
+  features: 'features',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CourseScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  title: 'title',
+  description: 'description',
+  price: 'price',
+  status: 'status',
+  enrollmentCount: 'enrollmentCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CourseLessonScalarFieldEnum = {
+  id: 'id',
+  courseId: 'courseId',
+  title: 'title',
+  content: 'content',
+  order: 'order',
+  isPublished: 'isPublished',
+  scheduledFor: 'scheduledFor',
+  sentAt: 'sentAt',
+  deliveryDelay: 'deliveryDelay',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CourseEnrollmentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  courseId: 'courseId',
+  status: 'status',
+  currentLesson: 'currentLesson',
+  enrolledAt: 'enrolledAt',
+  completedAt: 'completedAt',
+  stripePaymentIntentId: 'stripePaymentIntentId'
+};
+
+exports.Prisma.CourseWishlistScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  courseId: 'courseId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EmailCampaignScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  type: 'type',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  content: 'content',
+  metadata: 'metadata',
+  subject: 'subject'
+};
+
+exports.Prisma.EmailTemplateScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  subject: 'subject',
+  htmlContent: 'htmlContent',
+  variables: 'variables',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AutomationWorkflowScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  trigger: 'trigger',
+  status: 'status',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AutomationStepScalarFieldEnum = {
+  id: 'id',
+  workflowId: 'workflowId',
+  type: 'type',
+  config: 'config',
+  order: 'order',
+  delayMinutes: 'delayMinutes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriberTagScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  color: 'color',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriberContactScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  userId: 'userId',
+  email: 'email',
+  tags: 'tags',
+  customFields: 'customFields',
+  preferences: 'preferences',
+  isActive: 'isActive',
+  subscribedAt: 'subscribedAt',
+  unsubscribedAt: 'unsubscribedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EmailLogScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  campaignId: 'campaignId',
+  courseLessonId: 'courseLessonId',
+  status: 'status',
+  sentAt: 'sentAt',
+  openedAt: 'openedAt',
+  clickedAt: 'clickedAt',
+  bouncedAt: 'bouncedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  errorMessage: 'errorMessage'
+};
+
+exports.Prisma.EmailQueueScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  templateId: 'templateId',
+  scheduledFor: 'scheduledFor',
+  status: 'status',
+  retryCount: 'retryCount',
+  lastAttemptAt: 'lastAttemptAt',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CommentScalarFieldEnum = {
+  id: 'id',
+  postId: 'postId',
+  userId: 'userId',
+  content: 'content',
+  parentId: 'parentId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BookmarkScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  postId: 'postId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AnalyticsScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  postId: 'postId',
+  views: 'views',
+  reads: 'reads',
+  engagement: 'engagement',
+  date: 'date',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AIUsageScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  feature: 'feature',
+  tokensUsed: 'tokensUsed',
+  cost: 'cost',
+  date: 'date',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -194,6 +418,81 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.UserRole = exports.$Enums.UserRole = {
+  SUBSCRIBER: 'SUBSCRIBER',
+  CREATOR: 'CREATOR',
+  ADMIN: 'ADMIN'
+};
+
+exports.PostStatus = exports.$Enums.PostStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  SCHEDULED: 'SCHEDULED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.SubscriptionStatus = exports.$Enums.SubscriptionStatus = {
+  ACTIVE: 'ACTIVE',
+  CANCELED: 'CANCELED',
+  PAST_DUE: 'PAST_DUE',
+  INCOMPLETE: 'INCOMPLETE'
+};
+
+exports.CourseStatus = exports.$Enums.CourseStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.EnrollmentStatus = exports.$Enums.EnrollmentStatus = {
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
+exports.CampaignType = exports.$Enums.CampaignType = {
+  NEWSLETTER: 'NEWSLETTER',
+  DRIP: 'DRIP',
+  COURSE: 'COURSE',
+  AUTOMATION: 'AUTOMATION'
+};
+
+exports.CampaignStatus = exports.$Enums.CampaignStatus = {
+  DRAFT: 'DRAFT',
+  SCHEDULED: 'SCHEDULED',
+  SENDING: 'SENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED'
+};
+
+exports.WorkflowStatus = exports.$Enums.WorkflowStatus = {
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.EmailStatus = exports.$Enums.EmailStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  DELIVERED: 'DELIVERED',
+  OPENED: 'OPENED',
+  CLICKED: 'CLICKED',
+  BOUNCED: 'BOUNCED',
+  FAILED: 'FAILED'
+};
+
+exports.QueueStatus = exports.$Enums.QueueStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',
@@ -201,36 +500,104 @@ exports.Prisma.ModelName = {
   Session: 'Session',
   VerificationToken: 'VerificationToken',
   PasswordResetToken: 'PasswordResetToken',
-  Authenticator: 'Authenticator'
+  Authenticator: 'Authenticator',
+  Publication: 'Publication',
+  Post: 'Post',
+  Subscription: 'Subscription',
+  SubscriptionTier: 'SubscriptionTier',
+  Course: 'Course',
+  CourseLesson: 'CourseLesson',
+  CourseEnrollment: 'CourseEnrollment',
+  CourseWishlist: 'CourseWishlist',
+  EmailCampaign: 'EmailCampaign',
+  EmailTemplate: 'EmailTemplate',
+  AutomationWorkflow: 'AutomationWorkflow',
+  AutomationStep: 'AutomationStep',
+  SubscriberTag: 'SubscriberTag',
+  SubscriberContact: 'SubscriberContact',
+  EmailLog: 'EmailLog',
+  EmailQueue: 'EmailQueue',
+  Comment: 'Comment',
+  Bookmark: 'Bookmark',
+  Analytics: 'Analytics',
+  AIUsage: 'AIUsage'
 };
-
 /**
- * This is a stub Prisma Client that will error at runtime if called.
+ * Create the Client
  */
-class PrismaClient {
-  constructor() {
-    return new Proxy(this, {
-      get(target, prop) {
-        let message
-        const runtime = getRuntime()
-        if (runtime.isEdge) {
-          message = `PrismaClient is not configured to run in ${runtime.prettyName}. In order to run Prisma Client on edge runtime, either:
-- Use Prisma Accelerate: https://pris.ly/d/accelerate
-- Use Driver Adapters: https://pris.ly/d/driver-adapters
-`;
-        } else {
-          message = 'PrismaClient is unable to run in this browser environment, or has been bundled for the browser (running in `' + runtime.prettyName + '`).'
-        }
-
-        message += `
-If this is unexpected, please open an issue: https://pris.ly/prisma-prisma-bug-report`
-
-        throw new Error(message)
+const config = {
+  "generator": {
+    "name": "client",
+    "provider": {
+      "fromEnvVar": null,
+      "value": "prisma-client-js"
+    },
+    "output": {
+      "value": "/Users/ehoneahobed/Work/Side-projects/substack-clone/kreeew/src/generated/prisma",
+      "fromEnvVar": null
+    },
+    "config": {
+      "engineType": "library"
+    },
+    "binaryTargets": [
+      {
+        "fromEnvVar": null,
+        "value": "darwin-arm64",
+        "native": true
       }
-    })
+    ],
+    "previewFeatures": [],
+    "sourceFilePath": "/Users/ehoneahobed/Work/Side-projects/substack-clone/kreeew/prisma/schema.prisma",
+    "isCustomOutput": true
+  },
+  "relativeEnvPaths": {
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../../.env"
+  },
+  "relativePath": "../../../prisma",
+  "clientVersion": "6.16.1",
+  "engineVersion": "1c57fdcd7e44b29b9313256c76699e91c3ac3c43",
+  "datasourceNames": [
+    "db"
+  ],
+  "activeProvider": "postgresql",
+  "inlineDatasources": {
+    "db": {
+      "url": {
+        "fromEnvVar": "DATABASE_URL",
+        "value": null
+      }
+    }
+  },
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id                   String              @id @default(cuid())\n  name                 String?\n  email                String              @unique\n  emailVerified        DateTime?\n  password             String?\n  image                String?\n  stripeCustomerId     String?             @unique\n  stripeSubscriptionId String?             @unique\n  planName             String              @default(\"free\")\n  subscriptionStatus   String?\n  createdAt            DateTime            @default(now())\n  updatedAt            DateTime            @updatedAt\n  archivedAt           DateTime?\n  role                 UserRole            @default(SUBSCRIBER)\n  aiUsage              AIUsage[]\n  accounts             Account[]\n  Authenticator        Authenticator[]\n  bookmarks            Bookmark[]\n  comments             Comment[]\n  courseEnrollments    CourseEnrollment[]\n  courseWishlist       CourseWishlist[]\n  publications         Publication[]\n  sessions             Session[]\n  subscriberContacts   SubscriberContact[]\n  subscriptions        Subscription[]\n}\n\nmodel Account {\n  userId            String\n  type              String\n  provider          String\n  providerAccountId String\n  refresh_token     String?\n  access_token      String?\n  expires_at        Int?\n  token_type        String?\n  scope             String?\n  id_token          String?\n  session_state     String?\n  createdAt         DateTime @default(now())\n  updatedAt         DateTime @updatedAt\n  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@id([provider, providerAccountId])\n}\n\nmodel Session {\n  sessionToken String   @unique\n  userId       String\n  expires      DateTime\n  createdAt    DateTime @default(now())\n  updatedAt    DateTime @updatedAt\n  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n\nmodel VerificationToken {\n  identifier String\n  token      String\n  expires    DateTime\n\n  @@id([identifier, token])\n}\n\nmodel PasswordResetToken {\n  id      String   @id @default(cuid())\n  email   String\n  token   String   @unique\n  expires DateTime\n\n  @@unique([email, token])\n}\n\nmodel Authenticator {\n  credentialID         String  @unique\n  userId               String\n  providerAccountId    String\n  credentialPublicKey  String\n  counter              Int\n  credentialDeviceType String\n  credentialBackedUp   Boolean\n  transports           String?\n  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@id([userId, credentialID])\n}\n\nmodel Publication {\n  id                  String               @id @default(cuid())\n  userId              String\n  name                String\n  slug                String               @unique\n  description         String?\n  logo                String?\n  domain              String?              @unique\n  themeColors         Json?\n  createdAt           DateTime             @default(now())\n  updatedAt           DateTime             @updatedAt\n  analytics           Analytics[]\n  automationWorkflows AutomationWorkflow[]\n  courses             Course[]\n  emailCampaigns      EmailCampaign[]\n  emailTemplates      EmailTemplate[]\n  posts               Post[]\n  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)\n  subscriberContacts  SubscriberContact[]\n  subscriberTags      SubscriberTag[]\n  subscriptions       Subscription[]\n  subscriptionTiers   SubscriptionTier[]\n}\n\nmodel Post {\n  id             String      @id @default(cuid())\n  publicationId  String\n  title          String\n  content        String\n  excerpt        String?\n  slug           String\n  status         PostStatus  @default(DRAFT)\n  publishedAt    DateTime?\n  isPaid         Boolean     @default(false)\n  featuredImage  String?\n  seoTitle       String?\n  seoDescription String?\n  createdAt      DateTime    @default(now())\n  updatedAt      DateTime    @updatedAt\n  analytics      Analytics[]\n  bookmarks      Bookmark[]\n  comments       Comment[]\n  publication    Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n\n  @@unique([publicationId, slug])\n}\n\nmodel Subscription {\n  id                   String             @id @default(cuid())\n  userId               String\n  publicationId        String\n  tier                 String             @default(\"free\")\n  status               SubscriptionStatus @default(ACTIVE)\n  stripeSubscriptionId String?\n  stripeCustomerId     String?\n  createdAt            DateTime           @default(now())\n  updatedAt            DateTime           @updatedAt\n  publication          Publication        @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([userId, publicationId])\n}\n\nmodel SubscriptionTier {\n  id            String      @id @default(cuid())\n  publicationId String\n  name          String\n  description   String?\n  price         Int\n  features      Json?\n  isActive      Boolean     @default(true)\n  createdAt     DateTime    @default(now())\n  updatedAt     DateTime    @updatedAt\n  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n}\n\nmodel Course {\n  id              String             @id @default(cuid())\n  publicationId   String\n  title           String\n  description     String?\n  price           Int\n  status          CourseStatus       @default(DRAFT)\n  enrollmentCount Int                @default(0)\n  createdAt       DateTime           @default(now())\n  updatedAt       DateTime           @updatedAt\n  publication     Publication        @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n  enrollments     CourseEnrollment[]\n  lessons         CourseLesson[]\n  wishlist        CourseWishlist[]\n}\n\nmodel CourseLesson {\n  id            String    @id @default(cuid())\n  courseId      String\n  title         String\n  content       String\n  order         Int\n  isPublished   Boolean   @default(false)\n  scheduledFor  DateTime?\n  sentAt        DateTime?\n  deliveryDelay Int       @default(1)\n  createdAt     DateTime  @default(now())\n  updatedAt     DateTime  @updatedAt\n\n  // Relations\n  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)\n  emailLogs EmailLog[]\n}\n\nmodel CourseEnrollment {\n  id                    String           @id @default(cuid())\n  userId                String\n  courseId              String\n  status                EnrollmentStatus @default(ACTIVE)\n  currentLesson         Int              @default(0)\n  enrolledAt            DateTime         @default(now())\n  completedAt           DateTime?\n  stripePaymentIntentId String?\n  course                Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)\n  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([userId, courseId])\n}\n\nmodel CourseWishlist {\n  id        String   @id @default(cuid())\n  userId    String\n  courseId  String\n  createdAt DateTime @default(now())\n\n  // Relations\n  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)\n  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([userId, courseId])\n}\n\nmodel EmailCampaign {\n  id            String         @id @default(cuid())\n  publicationId String\n  name          String\n  type          CampaignType\n  status        CampaignStatus @default(DRAFT)\n  scheduledAt   DateTime?\n  sentAt        DateTime?\n  createdAt     DateTime       @default(now())\n  updatedAt     DateTime       @updatedAt\n  content       String\n  metadata      Json?\n  subject       String\n  publication   Publication    @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n  emailLogs     EmailLog[]\n}\n\nmodel EmailTemplate {\n  id            String      @id @default(cuid())\n  publicationId String\n  name          String\n  subject       String\n  htmlContent   String\n  variables     Json?\n  isActive      Boolean     @default(true)\n  createdAt     DateTime    @default(now())\n  updatedAt     DateTime    @updatedAt\n  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n}\n\nmodel AutomationWorkflow {\n  id            String           @id @default(cuid())\n  publicationId String\n  name          String\n  trigger       String\n  status        WorkflowStatus   @default(ACTIVE)\n  isActive      Boolean          @default(true)\n  createdAt     DateTime         @default(now())\n  updatedAt     DateTime         @updatedAt\n  steps         AutomationStep[]\n  publication   Publication      @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n}\n\nmodel AutomationStep {\n  id           String             @id @default(cuid())\n  workflowId   String\n  type         String\n  config       Json\n  order        Int\n  delayMinutes Int                @default(0)\n  createdAt    DateTime           @default(now())\n  updatedAt    DateTime           @updatedAt\n  workflow     AutomationWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)\n}\n\nmodel SubscriberTag {\n  id            String      @id @default(cuid())\n  publicationId String\n  name          String\n  color         String      @default(\"#6366F1\")\n  createdAt     DateTime    @default(now())\n  updatedAt     DateTime    @updatedAt\n  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n\n  @@unique([publicationId, name])\n}\n\nmodel SubscriberContact {\n  id             String      @id @default(cuid())\n  publicationId  String\n  userId         String?\n  email          String\n  tags           String[]\n  customFields   Json?\n  preferences    Json?\n  isActive       Boolean     @default(true)\n  subscribedAt   DateTime    @default(now())\n  unsubscribedAt DateTime?\n  createdAt      DateTime    @default(now())\n  updatedAt      DateTime    @updatedAt\n  emailLogs      EmailLog[]\n  publication    Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n  user           User?       @relation(fields: [userId], references: [id])\n\n  @@unique([publicationId, email])\n}\n\nmodel EmailLog {\n  id             String      @id @default(cuid())\n  contactId      String\n  campaignId     String?\n  courseLessonId String?\n  status         EmailStatus @default(PENDING)\n  sentAt         DateTime?\n  openedAt       DateTime?\n  clickedAt      DateTime?\n  bouncedAt      DateTime?\n  createdAt      DateTime    @default(now())\n  updatedAt      DateTime    @updatedAt\n  errorMessage   String?\n\n  // Relations\n  campaign     EmailCampaign?    @relation(fields: [campaignId], references: [id])\n  courseLesson CourseLesson?     @relation(fields: [courseLessonId], references: [id])\n  contact      SubscriberContact @relation(fields: [contactId], references: [id], onDelete: Cascade)\n}\n\nmodel EmailQueue {\n  id            String      @id @default(cuid())\n  contactId     String\n  templateId    String?\n  scheduledFor  DateTime\n  status        QueueStatus @default(PENDING)\n  retryCount    Int         @default(0)\n  lastAttemptAt DateTime?\n  errorMessage  String?\n  createdAt     DateTime    @default(now())\n  updatedAt     DateTime    @updatedAt\n}\n\nmodel Comment {\n  id        String    @id @default(cuid())\n  postId    String\n  userId    String\n  content   String\n  parentId  String?\n  createdAt DateTime  @default(now())\n  updatedAt DateTime  @updatedAt\n  parent    Comment?  @relation(\"CommentReplies\", fields: [parentId], references: [id])\n  replies   Comment[] @relation(\"CommentReplies\")\n  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)\n  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n\nmodel Bookmark {\n  id        String   @id @default(cuid())\n  userId    String\n  postId    String\n  createdAt DateTime @default(now())\n  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([userId, postId])\n}\n\nmodel Analytics {\n  id            String      @id @default(cuid())\n  publicationId String\n  postId        String?\n  views         Int         @default(0)\n  reads         Int         @default(0)\n  engagement    Float       @default(0.0)\n  date          DateTime    @default(now())\n  createdAt     DateTime    @default(now())\n  post          Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)\n  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)\n\n  @@unique([publicationId, postId, date])\n}\n\nmodel AIUsage {\n  id         String   @id @default(cuid())\n  userId     String\n  feature    String\n  tokensUsed Int\n  cost       Float    @default(0.0)\n  date       DateTime @default(now())\n  createdAt  DateTime @default(now())\n  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n}\n\nenum UserRole {\n  SUBSCRIBER\n  CREATOR\n  ADMIN\n}\n\nenum PostStatus {\n  DRAFT\n  PUBLISHED\n  SCHEDULED\n  ARCHIVED\n}\n\nenum SubscriptionStatus {\n  ACTIVE\n  CANCELED\n  PAST_DUE\n  INCOMPLETE\n}\n\nenum CourseStatus {\n  DRAFT\n  PUBLISHED\n  ARCHIVED\n}\n\nenum EnrollmentStatus {\n  ACTIVE\n  COMPLETED\n  CANCELLED\n}\n\nenum CampaignType {\n  NEWSLETTER\n  DRIP\n  COURSE\n  AUTOMATION\n}\n\nenum CampaignStatus {\n  DRAFT\n  SCHEDULED\n  SENDING\n  SENT\n  FAILED\n}\n\nenum WorkflowStatus {\n  ACTIVE\n  PAUSED\n  ARCHIVED\n}\n\nenum EmailStatus {\n  PENDING\n  SENT\n  DELIVERED\n  OPENED\n  CLICKED\n  BOUNCED\n  FAILED\n}\n\nenum QueueStatus {\n  PENDING\n  PROCESSING\n  COMPLETED\n  FAILED\n  CANCELLED\n}\n",
+  "inlineSchemaHash": "9aec1bd9d516b75ee283e38e550279c84d8f0592fe942c3e945fa6622b1ac7bd",
+  "copyEngine": true
+}
+config.dirname = '/'
+
+config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"emailVerified\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"image\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"stripeSubscriptionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"planName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subscriptionStatus\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"archivedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"UserRole\"},{\"name\":\"aiUsage\",\"kind\":\"object\",\"type\":\"AIUsage\",\"relationName\":\"AIUsageToUser\"},{\"name\":\"accounts\",\"kind\":\"object\",\"type\":\"Account\",\"relationName\":\"AccountToUser\"},{\"name\":\"Authenticator\",\"kind\":\"object\",\"type\":\"Authenticator\",\"relationName\":\"AuthenticatorToUser\"},{\"name\":\"bookmarks\",\"kind\":\"object\",\"type\":\"Bookmark\",\"relationName\":\"BookmarkToUser\"},{\"name\":\"comments\",\"kind\":\"object\",\"type\":\"Comment\",\"relationName\":\"CommentToUser\"},{\"name\":\"courseEnrollments\",\"kind\":\"object\",\"type\":\"CourseEnrollment\",\"relationName\":\"CourseEnrollmentToUser\"},{\"name\":\"courseWishlist\",\"kind\":\"object\",\"type\":\"CourseWishlist\",\"relationName\":\"CourseWishlistToUser\"},{\"name\":\"publications\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"PublicationToUser\"},{\"name\":\"sessions\",\"kind\":\"object\",\"type\":\"Session\",\"relationName\":\"SessionToUser\"},{\"name\":\"subscriberContacts\",\"kind\":\"object\",\"type\":\"SubscriberContact\",\"relationName\":\"SubscriberContactToUser\"},{\"name\":\"subscriptions\",\"kind\":\"object\",\"type\":\"Subscription\",\"relationName\":\"SubscriptionToUser\"}],\"dbName\":null},\"Account\":{\"fields\":[{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"provider\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"providerAccountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"refresh_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires_at\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"token_type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"scope\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"id_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"session_state\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AccountToUser\"}],\"dbName\":null},\"Session\":{\"fields\":[{\"name\":\"sessionToken\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SessionToUser\"}],\"dbName\":null},\"VerificationToken\":{\"fields\":[{\"name\":\"identifier\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"PasswordResetToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"expires\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Authenticator\":{\"fields\":[{\"name\":\"credentialID\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"providerAccountId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"credentialPublicKey\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"counter\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"credentialDeviceType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"credentialBackedUp\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"transports\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AuthenticatorToUser\"}],\"dbName\":null},\"Publication\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"slug\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"logo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"domain\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"themeColors\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"analytics\",\"kind\":\"object\",\"type\":\"Analytics\",\"relationName\":\"AnalyticsToPublication\"},{\"name\":\"automationWorkflows\",\"kind\":\"object\",\"type\":\"AutomationWorkflow\",\"relationName\":\"AutomationWorkflowToPublication\"},{\"name\":\"courses\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"CourseToPublication\"},{\"name\":\"emailCampaigns\",\"kind\":\"object\",\"type\":\"EmailCampaign\",\"relationName\":\"EmailCampaignToPublication\"},{\"name\":\"emailTemplates\",\"kind\":\"object\",\"type\":\"EmailTemplate\",\"relationName\":\"EmailTemplateToPublication\"},{\"name\":\"posts\",\"kind\":\"object\",\"type\":\"Post\",\"relationName\":\"PostToPublication\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"PublicationToUser\"},{\"name\":\"subscriberContacts\",\"kind\":\"object\",\"type\":\"SubscriberContact\",\"relationName\":\"PublicationToSubscriberContact\"},{\"name\":\"subscriberTags\",\"kind\":\"object\",\"type\":\"SubscriberTag\",\"relationName\":\"PublicationToSubscriberTag\"},{\"name\":\"subscriptions\",\"kind\":\"object\",\"type\":\"Subscription\",\"relationName\":\"PublicationToSubscription\"},{\"name\":\"subscriptionTiers\",\"kind\":\"object\",\"type\":\"SubscriptionTier\",\"relationName\":\"PublicationToSubscriptionTier\"}],\"dbName\":null},\"Post\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"excerpt\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"slug\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"PostStatus\"},{\"name\":\"publishedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"isPaid\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"featuredImage\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seoTitle\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"seoDescription\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"analytics\",\"kind\":\"object\",\"type\":\"Analytics\",\"relationName\":\"AnalyticsToPost\"},{\"name\":\"bookmarks\",\"kind\":\"object\",\"type\":\"Bookmark\",\"relationName\":\"BookmarkToPost\"},{\"name\":\"comments\",\"kind\":\"object\",\"type\":\"Comment\",\"relationName\":\"CommentToPost\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"PostToPublication\"}],\"dbName\":null},\"Subscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tier\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"SubscriptionStatus\"},{\"name\":\"stripeSubscriptionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"stripeCustomerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"PublicationToSubscription\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SubscriptionToUser\"}],\"dbName\":null},\"SubscriptionTier\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"features\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"PublicationToSubscriptionTier\"}],\"dbName\":null},\"Course\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"CourseStatus\"},{\"name\":\"enrollmentCount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"CourseToPublication\"},{\"name\":\"enrollments\",\"kind\":\"object\",\"type\":\"CourseEnrollment\",\"relationName\":\"CourseToCourseEnrollment\"},{\"name\":\"lessons\",\"kind\":\"object\",\"type\":\"CourseLesson\",\"relationName\":\"CourseToCourseLesson\"},{\"name\":\"wishlist\",\"kind\":\"object\",\"type\":\"CourseWishlist\",\"relationName\":\"CourseToCourseWishlist\"}],\"dbName\":null},\"CourseLesson\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"courseId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"order\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"isPublished\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"scheduledFor\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"sentAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"deliveryDelay\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"course\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"CourseToCourseLesson\"},{\"name\":\"emailLogs\",\"kind\":\"object\",\"type\":\"EmailLog\",\"relationName\":\"CourseLessonToEmailLog\"}],\"dbName\":null},\"CourseEnrollment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"courseId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"EnrollmentStatus\"},{\"name\":\"currentLesson\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"enrolledAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"completedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"stripePaymentIntentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"course\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"CourseToCourseEnrollment\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"CourseEnrollmentToUser\"}],\"dbName\":null},\"CourseWishlist\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"courseId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"course\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"CourseToCourseWishlist\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"CourseWishlistToUser\"}],\"dbName\":null},\"EmailCampaign\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type\",\"kind\":\"enum\",\"type\":\"CampaignType\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"CampaignStatus\"},{\"name\":\"scheduledAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"sentAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"metadata\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"subject\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"EmailCampaignToPublication\"},{\"name\":\"emailLogs\",\"kind\":\"object\",\"type\":\"EmailLog\",\"relationName\":\"EmailCampaignToEmailLog\"}],\"dbName\":null},\"EmailTemplate\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"subject\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"htmlContent\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"variables\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"EmailTemplateToPublication\"}],\"dbName\":null},\"AutomationWorkflow\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"trigger\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"WorkflowStatus\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"steps\",\"kind\":\"object\",\"type\":\"AutomationStep\",\"relationName\":\"AutomationStepToAutomationWorkflow\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"AutomationWorkflowToPublication\"}],\"dbName\":null},\"AutomationStep\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"workflowId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"type\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"config\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"order\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"delayMinutes\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"workflow\",\"kind\":\"object\",\"type\":\"AutomationWorkflow\",\"relationName\":\"AutomationStepToAutomationWorkflow\"}],\"dbName\":null},\"SubscriberTag\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"color\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"PublicationToSubscriberTag\"}],\"dbName\":null},\"SubscriberContact\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tags\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"customFields\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"preferences\",\"kind\":\"scalar\",\"type\":\"Json\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"subscribedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"unsubscribedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"emailLogs\",\"kind\":\"object\",\"type\":\"EmailLog\",\"relationName\":\"EmailLogToSubscriberContact\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"PublicationToSubscriberContact\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"SubscriberContactToUser\"}],\"dbName\":null},\"EmailLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contactId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"campaignId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"courseLessonId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"EmailStatus\"},{\"name\":\"sentAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"openedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"clickedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"bouncedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"errorMessage\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"campaign\",\"kind\":\"object\",\"type\":\"EmailCampaign\",\"relationName\":\"EmailCampaignToEmailLog\"},{\"name\":\"courseLesson\",\"kind\":\"object\",\"type\":\"CourseLesson\",\"relationName\":\"CourseLessonToEmailLog\"},{\"name\":\"contact\",\"kind\":\"object\",\"type\":\"SubscriberContact\",\"relationName\":\"EmailLogToSubscriberContact\"}],\"dbName\":null},\"EmailQueue\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"contactId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"templateId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"scheduledFor\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"QueueStatus\"},{\"name\":\"retryCount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"lastAttemptAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"errorMessage\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Comment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"postId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"parentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"parent\",\"kind\":\"object\",\"type\":\"Comment\",\"relationName\":\"CommentReplies\"},{\"name\":\"replies\",\"kind\":\"object\",\"type\":\"Comment\",\"relationName\":\"CommentReplies\"},{\"name\":\"post\",\"kind\":\"object\",\"type\":\"Post\",\"relationName\":\"CommentToPost\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"CommentToUser\"}],\"dbName\":null},\"Bookmark\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"postId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"post\",\"kind\":\"object\",\"type\":\"Post\",\"relationName\":\"BookmarkToPost\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"BookmarkToUser\"}],\"dbName\":null},\"Analytics\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"publicationId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"postId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"views\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"reads\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"engagement\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"post\",\"kind\":\"object\",\"type\":\"Post\",\"relationName\":\"AnalyticsToPost\"},{\"name\":\"publication\",\"kind\":\"object\",\"type\":\"Publication\",\"relationName\":\"AnalyticsToPublication\"}],\"dbName\":null},\"AIUsage\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"feature\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tokensUsed\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"cost\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"user\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"AIUsageToUser\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
+config.engineWasm = {
+  getRuntime: async () => require('./query_engine_bg.js'),
+  getQueryEngineWasmModule: async () => {
+    const loader = (await import('#wasm-engine-loader')).default
+    const engine = (await loader).default
+    return engine
   }
 }
+config.compilerWasm = undefined
 
+config.injectableEdgeEnv = () => ({
+  parsed: {
+    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
+  }
+})
+
+if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined) {
+  Debug.enable(typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined)
+}
+
+const PrismaClient = getPrismaClient(config)
 exports.PrismaClient = PrismaClient
-
 Object.assign(exports, Prisma)
+

@@ -14,7 +14,7 @@ export default function AuthLayout({
         <div className="container mx-auto flex h-14 items-center">
           <Link href="/" className="flex items-center space-x-2">
             <Package2 className="h-6 w-6" />
-            <span className="font-bold">Auth Boilerplate</span>
+            <span className="font-bold">Kreeew</span>
           </Link>
           <div className="flex-1" />
           <ThemeToggle />

@@ -11,14 +11,13 @@ type SiteConfig = {
 }
 
 export const siteConfig: SiteConfig = {
-  name: "QuickCalendar",
-  description: "The one-stop shop for all your calendar needs.",
-  url: "https://quickcalendar.com",
+  name: "Kreeew",
+  description: "Turn your ideas into income streams with AI-powered content creation, email courses, and automation.",
+  url: "https://kreeew.com",
   authors: [
-    { name: "Gideon Ofori Addo", url: "https://github.com/wuzgood98" },
     { name: "Obed Ehoneah", url: "https://github.com/ehoneahobed" },
   ],
-  og: "https://quickcalendar.com/og.png",
+  og: "https://kreeew.com/og.png",
   themeColors: {
     light: "#ffffff",
     dark: "#000000",

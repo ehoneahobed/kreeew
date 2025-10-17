@@ -35,15 +35,19 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="theme-color" content={siteConfig.themeColors.light} />
         <script
           dangerouslySetInnerHTML={{
             __html: `
           try {
-            if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-              document.querySelector('meta[name="theme-color"]').setAttribute('content', '${siteConfig.themeColors.dark}')
+            if (typeof window !== 'undefined' && localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+              const meta = document.querySelector('meta[name="theme-color"]');
+              if (meta) {
+                meta.setAttribute('content', '${siteConfig.themeColors.dark}');
               }
-              } catch (_) {}
-              `,
+            }
+          } catch (_) {}
+          `,
           }}
         />
       </head>
@@ -54,6 +58,7 @@ export default async function RootLayout({
           activeThemeValue ? `theme-${activeThemeValue}` : "",
           isScaled ? "theme-scaled" : ""
         )}
+        suppressHydrationWarning={true}
       >
         <AppProviders>{children}</AppProviders>
       </body>

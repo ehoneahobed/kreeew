@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.7.0
- * Query Engine version: 3cff47a7f5d65c3ea74883f1d736e41d68ce91ed
+ * Prisma Client JS version: 6.16.1
+ * Query Engine version: 1c57fdcd7e44b29b9313256c76699e91c3ac3c43
  */
 Prisma.prismaVersion = {
-  client: "6.7.0",
-  engine: "3cff47a7f5d65c3ea74883f1d736e41d68ce91ed"
+  client: "6.16.1",
+  engine: "1c57fdcd7e44b29b9313256c76699e91c3ac3c43"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -127,8 +127,14 @@ exports.Prisma.UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   password: 'password',
   image: 'image',
+  stripeCustomerId: 'stripeCustomerId',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  planName: 'planName',
+  subscriptionStatus: 'subscriptionStatus',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  archivedAt: 'archivedAt',
+  role: 'role'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -179,9 +185,255 @@ exports.Prisma.AuthenticatorScalarFieldEnum = {
   transports: 'transports'
 };
 
+exports.Prisma.PublicationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  slug: 'slug',
+  description: 'description',
+  logo: 'logo',
+  domain: 'domain',
+  themeColors: 'themeColors',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PostScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  title: 'title',
+  content: 'content',
+  excerpt: 'excerpt',
+  slug: 'slug',
+  status: 'status',
+  publishedAt: 'publishedAt',
+  isPaid: 'isPaid',
+  featuredImage: 'featuredImage',
+  seoTitle: 'seoTitle',
+  seoDescription: 'seoDescription',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  publicationId: 'publicationId',
+  tier: 'tier',
+  status: 'status',
+  stripeSubscriptionId: 'stripeSubscriptionId',
+  stripeCustomerId: 'stripeCustomerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriptionTierScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  description: 'description',
+  price: 'price',
+  features: 'features',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CourseScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  title: 'title',
+  description: 'description',
+  price: 'price',
+  status: 'status',
+  enrollmentCount: 'enrollmentCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CourseLessonScalarFieldEnum = {
+  id: 'id',
+  courseId: 'courseId',
+  title: 'title',
+  content: 'content',
+  order: 'order',
+  isPublished: 'isPublished',
+  scheduledFor: 'scheduledFor',
+  sentAt: 'sentAt',
+  deliveryDelay: 'deliveryDelay',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CourseEnrollmentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  courseId: 'courseId',
+  status: 'status',
+  currentLesson: 'currentLesson',
+  enrolledAt: 'enrolledAt',
+  completedAt: 'completedAt',
+  stripePaymentIntentId: 'stripePaymentIntentId'
+};
+
+exports.Prisma.CourseWishlistScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  courseId: 'courseId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EmailCampaignScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  type: 'type',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  sentAt: 'sentAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  content: 'content',
+  metadata: 'metadata',
+  subject: 'subject'
+};
+
+exports.Prisma.EmailTemplateScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  subject: 'subject',
+  htmlContent: 'htmlContent',
+  variables: 'variables',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AutomationWorkflowScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  trigger: 'trigger',
+  status: 'status',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.AutomationStepScalarFieldEnum = {
+  id: 'id',
+  workflowId: 'workflowId',
+  type: 'type',
+  config: 'config',
+  order: 'order',
+  delayMinutes: 'delayMinutes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriberTagScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  name: 'name',
+  color: 'color',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.SubscriberContactScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  userId: 'userId',
+  email: 'email',
+  tags: 'tags',
+  customFields: 'customFields',
+  preferences: 'preferences',
+  isActive: 'isActive',
+  subscribedAt: 'subscribedAt',
+  unsubscribedAt: 'unsubscribedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EmailLogScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  campaignId: 'campaignId',
+  courseLessonId: 'courseLessonId',
+  status: 'status',
+  sentAt: 'sentAt',
+  openedAt: 'openedAt',
+  clickedAt: 'clickedAt',
+  bouncedAt: 'bouncedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  errorMessage: 'errorMessage'
+};
+
+exports.Prisma.EmailQueueScalarFieldEnum = {
+  id: 'id',
+  contactId: 'contactId',
+  templateId: 'templateId',
+  scheduledFor: 'scheduledFor',
+  status: 'status',
+  retryCount: 'retryCount',
+  lastAttemptAt: 'lastAttemptAt',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CommentScalarFieldEnum = {
+  id: 'id',
+  postId: 'postId',
+  userId: 'userId',
+  content: 'content',
+  parentId: 'parentId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BookmarkScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  postId: 'postId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AnalyticsScalarFieldEnum = {
+  id: 'id',
+  publicationId: 'publicationId',
+  postId: 'postId',
+  views: 'views',
+  reads: 'reads',
+  engagement: 'engagement',
+  date: 'date',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AIUsageScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  feature: 'feature',
+  tokensUsed: 'tokensUsed',
+  cost: 'cost',
+  date: 'date',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -194,6 +446,81 @@ exports.Prisma.NullsOrder = {
   last: 'last'
 };
 
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
+};
+exports.UserRole = exports.$Enums.UserRole = {
+  SUBSCRIBER: 'SUBSCRIBER',
+  CREATOR: 'CREATOR',
+  ADMIN: 'ADMIN'
+};
+
+exports.PostStatus = exports.$Enums.PostStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  SCHEDULED: 'SCHEDULED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.SubscriptionStatus = exports.$Enums.SubscriptionStatus = {
+  ACTIVE: 'ACTIVE',
+  CANCELED: 'CANCELED',
+  PAST_DUE: 'PAST_DUE',
+  INCOMPLETE: 'INCOMPLETE'
+};
+
+exports.CourseStatus = exports.$Enums.CourseStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.EnrollmentStatus = exports.$Enums.EnrollmentStatus = {
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+};
+
+exports.CampaignType = exports.$Enums.CampaignType = {
+  NEWSLETTER: 'NEWSLETTER',
+  DRIP: 'DRIP',
+  COURSE: 'COURSE',
+  AUTOMATION: 'AUTOMATION'
+};
+
+exports.CampaignStatus = exports.$Enums.CampaignStatus = {
+  DRAFT: 'DRAFT',
+  SCHEDULED: 'SCHEDULED',
+  SENDING: 'SENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED'
+};
+
+exports.WorkflowStatus = exports.$Enums.WorkflowStatus = {
+  ACTIVE: 'ACTIVE',
+  PAUSED: 'PAUSED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.EmailStatus = exports.$Enums.EmailStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  DELIVERED: 'DELIVERED',
+  OPENED: 'OPENED',
+  CLICKED: 'CLICKED',
+  BOUNCED: 'BOUNCED',
+  FAILED: 'FAILED'
+};
+
+exports.QueueStatus = exports.$Enums.QueueStatus = {
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED'
+};
 
 exports.Prisma.ModelName = {
   User: 'User',
@@ -201,7 +528,27 @@ exports.Prisma.ModelName = {
   Session: 'Session',
   VerificationToken: 'VerificationToken',
   PasswordResetToken: 'PasswordResetToken',
-  Authenticator: 'Authenticator'
+  Authenticator: 'Authenticator',
+  Publication: 'Publication',
+  Post: 'Post',
+  Subscription: 'Subscription',
+  SubscriptionTier: 'SubscriptionTier',
+  Course: 'Course',
+  CourseLesson: 'CourseLesson',
+  CourseEnrollment: 'CourseEnrollment',
+  CourseWishlist: 'CourseWishlist',
+  EmailCampaign: 'EmailCampaign',
+  EmailTemplate: 'EmailTemplate',
+  AutomationWorkflow: 'AutomationWorkflow',
+  AutomationStep: 'AutomationStep',
+  SubscriberTag: 'SubscriberTag',
+  SubscriberContact: 'SubscriberContact',
+  EmailLog: 'EmailLog',
+  EmailQueue: 'EmailQueue',
+  Comment: 'Comment',
+  Bookmark: 'Bookmark',
+  Analytics: 'Analytics',
+  AIUsage: 'AIUsage'
 };
 
 /**

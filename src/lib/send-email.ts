@@ -5,17 +5,14 @@ const SENDER_EMAIL_ADDRESS =
   process.env.SENDER_EMAIL_ADDRESS ?? process.env.EMAIL_FROM
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 
-if (!SENDER_EMAIL_ADDRESS) {
-  throw new Error(
-    "SENDER_EMAIL_ADDRESS must be set (or EMAIL_FROM for backward compatibility)"
-  )
+// Make email optional for development
+const isEmailEnabled = SENDER_EMAIL_ADDRESS && RESEND_API_KEY
+
+if (!isEmailEnabled) {
+  console.warn("Email functionality is disabled. Set SENDER_EMAIL_ADDRESS and RESEND_API_KEY to enable.")
 }
 
-if (!RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY must be set")
-}
-
-const resend = new Resend(RESEND_API_KEY)
+const resend = isEmailEnabled ? new Resend(RESEND_API_KEY) : null
 
 type SendEmailProps = {
   from?: string
@@ -34,6 +31,15 @@ export async function sendEmail({
   react,
   text,
 }: SendEmailProps) {
+  if (!isEmailEnabled) {
+    console.log("Email sending is disabled. Would send:", {
+      from: from ?? SENDER_EMAIL_ADDRESS,
+      to,
+      subject,
+    })
+    return { data: null, error: null }
+  }
+
   const data = await resend.emails.send({
     // Sender email address. To include a friendly name, use the format "Your Name <sender@domain.com>"
     from: from ?? SENDER_EMAIL_ADDRESS!,

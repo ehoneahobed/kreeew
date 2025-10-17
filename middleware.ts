@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server"
-
-import { auth } from "@/lib/auth/auth"
-import { getSafeRedirectUrl } from "@/lib/redirect"
+import type { NextRequest } from "next/server"
 
 const ROUTE_CONFIG = {
-  protected: [{ exact: false, path: "/portal" }],
+  protected: [
+    { exact: false, path: "/portal" },
+    { exact: false, path: "/api/publications" },
+    { exact: false, path: "/api/ai" },
+    { exact: false, path: "/api/subscriptions" },
+    { exact: false, path: "/api/courses" },
+    { exact: false, path: "/api/campaigns" },
+    { exact: false, path: "/api/automation" },
+  ],
   auth: [
     { exact: true, path: "/auth/signin" },
     { exact: true, path: "/auth/signup" },
     { exact: true, path: "/auth/forgot-password" },
     { exact: true, path: "/auth/reset-password" },
   ],
-  api: [{ exact: false, path: "/api/contact" }],
+  api: [
+    { exact: false, path: "/api/contact" },
+    { exact: false, path: "/api/stripe" },
+  ],
   defaultRedirect: "/portal",
   loginPath: "/auth/signin",
 } as const
@@ -29,18 +38,17 @@ function isRouteMatch(
 }
 
 function buildRedirectUrl(base: string, redirectPath: string, nextUrl: URL) {
-  const safePath = getSafeRedirectUrl(
-    redirectPath,
-    ROUTE_CONFIG.defaultRedirect
-  )
-
-  const redirectParam = `?callbackUrl=${encodeURIComponent(safePath)}`
+  const redirectParam = `?callbackUrl=${encodeURIComponent(redirectPath)}`
   return new URL(base + redirectParam, nextUrl)
 }
 
-export default auth((req) => {
+export default function middleware(req: NextRequest) {
   const { nextUrl } = req
-  const isLoggedIn = !!req.auth
+  
+  // Check if user is logged in by looking for session cookie
+  const sessionToken = req.cookies.get("authjs.session-token")?.value
+  const isLoggedIn = !!sessionToken
+  
   const isApiAuthRoute = isRouteMatch(nextUrl.pathname, ROUTE_CONFIG.api)
   const isProtectedRoute = isRouteMatch(
     nextUrl.pathname,
@@ -77,7 +85,7 @@ export default auth((req) => {
   }
 
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: [
