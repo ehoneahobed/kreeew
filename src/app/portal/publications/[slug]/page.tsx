@@ -57,15 +57,15 @@ export default async function PublicationPage({ params }: PublicationPageProps) 
     },
     {
       title: "Subscribers",
-      value: publication._count.subscriptions,
+      value: publication._count.activeSubscriberContacts || 0,
       icon: Users,
-      description: "Active subscribers"
+      description: "Active email subscribers"
     },
     {
-      title: "Contacts",
-      value: publication._count.subscriberContacts,
-      icon: Mail,
-      description: "Email contacts"
+      title: "Paid Subscribers",
+      value: publication._count.activeSubscriptions || 0,
+      icon: Users,
+      description: "Active paid subscriptions"
     },
     {
       title: "Courses",

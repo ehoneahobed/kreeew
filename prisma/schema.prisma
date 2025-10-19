@@ -267,7 +267,9 @@ model AutomationWorkflow {
   id            String           @id @default(cuid())
   publicationId String
   name          String
+  description   String?
   trigger       String
+  triggerConfig Json?
   status        WorkflowStatus   @default(ACTIVE)
   isActive      Boolean          @default(true)
   createdAt     DateTime         @default(now())
@@ -454,6 +456,7 @@ enum CampaignStatus {
 enum WorkflowStatus {
   ACTIVE
   PAUSED
+  DRAFT
   ARCHIVED
 }
 

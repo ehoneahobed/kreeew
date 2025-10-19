@@ -314,7 +314,9 @@ exports.Prisma.AutomationWorkflowScalarFieldEnum = {
   id: 'id',
   publicationId: 'publicationId',
   name: 'name',
+  description: 'description',
   trigger: 'trigger',
+  triggerConfig: 'triggerConfig',
   status: 'status',
   isActive: 'isActive',
   createdAt: 'createdAt',
@@ -501,6 +503,7 @@ exports.CampaignStatus = exports.$Enums.CampaignStatus = {
 exports.WorkflowStatus = exports.$Enums.WorkflowStatus = {
   ACTIVE: 'ACTIVE',
   PAUSED: 'PAUSED',
+  DRAFT: 'DRAFT',
   ARCHIVED: 'ARCHIVED'
 };
 

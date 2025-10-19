@@ -25,7 +25,7 @@ interface Automation {
   name: string
   description?: string
   status: "ACTIVE" | "PAUSED" | "DRAFT"
-  triggerType: "SUBSCRIBE" | "UNSUBSCRIBE" | "POST_PUBLISHED" | "COURSE_ENROLLED"
+  trigger: "SUBSCRIBE" | "UNSUBSCRIBE" | "POST_PUBLISHED" | "COURSE_ENROLLED"
   createdAt: string
   updatedAt: string
   publication: {
@@ -35,7 +35,6 @@ interface Automation {
   }
   _count: {
     steps: number
-    executions: number
   }
 }
 
@@ -134,8 +133,8 @@ export default function AutomationPage() {
     }
   }
 
-  const getTriggerIcon = (triggerType: string) => {
-    switch (triggerType) {
+  const getTriggerIcon = (trigger: string) => {
+    switch (trigger) {
       case "SUBSCRIBE":
         return <Users className="w-4 h-4" />
       case "UNSUBSCRIBE":
@@ -149,8 +148,8 @@ export default function AutomationPage() {
     }
   }
 
-  const getTriggerLabel = (triggerType: string) => {
-    switch (triggerType) {
+  const getTriggerLabel = (trigger: string) => {
+    switch (trigger) {
       case "SUBSCRIBE":
         return "New Subscriber"
       case "UNSUBSCRIBE":
@@ -160,12 +159,12 @@ export default function AutomationPage() {
       case "COURSE_ENROLLED":
         return "Course Enrolled"
       default:
-        return triggerType
+        return trigger
     }
   }
 
-  const activeAutomations = automations.filter(a => a.status === "ACTIVE")
-  const totalExecutions = automations.reduce((sum, a) => sum + a._count.executions, 0)
+  const activeAutomations = automations.filter(a => (a.status || "DRAFT") === "ACTIVE")
+  const totalExecutions = automations.reduce((sum, a) => sum + (a._count?.executions || 0), 0)
 
   if (loading) {
     return (
@@ -224,7 +223,7 @@ export default function AutomationPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {automations.filter(a => a.status === "PAUSED").length}
+              {automations.filter(a => (a.status || "DRAFT") === "PAUSED").length}
             </div>
             <p className="text-xs text-muted-foreground">
               Temporarily stopped
@@ -288,19 +287,26 @@ export default function AutomationPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{automation.name}</h3>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg">{automation.name}</h3>
+                          {automation.description && (
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {automation.description}
+                            </p>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2">
-                          <Badge className={getStatusColor(automation.status)}>
+                          <Badge className={getStatusColor(automation.status || "DRAFT")}>
                             <div className="flex items-center gap-1">
-                              {automation.status === "ACTIVE" ? <Play className="w-3 h-3" /> : 
-                               automation.status === "PAUSED" ? <Pause className="w-3 h-3" /> : 
+                              {(automation.status || "DRAFT") === "ACTIVE" ? <Play className="w-3 h-3" /> :
+                               (automation.status || "DRAFT") === "PAUSED" ? <Pause className="w-3 h-3" /> :
                                <Edit className="w-3 h-3" />}
-                              {automation.status}
+                              {automation.status || "DRAFT"}
                             </div>
                           </Badge>
                           <Badge variant="outline" className="flex items-center gap-1">
-                            {getTriggerIcon(automation.triggerType)}
-                            {getTriggerLabel(automation.triggerType)}
+                            {getTriggerIcon(automation.trigger)}
+                            {getTriggerLabel(automation.trigger)}
                           </Badge>
                           <Badge variant="secondary" className="text-xs">
                             {automation.publication.name}
@@ -327,7 +333,7 @@ export default function AutomationPage() {
 
                         <div className="flex items-center gap-1">
                           <Zap className="w-3 h-3" />
-                          <span>{automation._count.executions} executions</span>
+                          <span>{automation._count?.executions || 0} executions</span>
                         </div>
                       </div>
                     </div>
@@ -336,11 +342,11 @@ export default function AutomationPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleToggleStatus(automation.id, automation.publication.slug, automation.status)}
+                        onClick={() => handleToggleStatus(automation.id, automation.publication.slug, automation.status || "DRAFT")}
                         disabled={actionLoading === automation.id}
                         className="w-full sm:w-auto"
                       >
-                        {automation.status === "ACTIVE" ? (
+                        {(automation.status || "DRAFT") === "ACTIVE" ? (
                           <>
                             <Pause className="w-4 h-4 mr-1" />
                             <span className="sm:hidden">Pause</span>
@@ -356,9 +362,11 @@ export default function AutomationPage() {
                       </Button>
                       
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        <Link href={`/portal/automation/builder/${automation.id}?publication=${automation.publication.slug}`}>
+                          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </Link>
                         
                         <Button
                           variant="outline"

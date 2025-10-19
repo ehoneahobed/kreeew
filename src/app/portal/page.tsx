@@ -28,6 +28,8 @@ type PublicationWithCounts = {
     posts: number
     subscriptions: number
     subscriberContacts: number
+    activeSubscriptions: number
+    activeSubscriberContacts: number
   }
 }
 
@@ -42,12 +44,13 @@ export default async function PortalPage() {
 
   // Calculate totals across all publications
   const totalStats = publications.reduce(
-    (acc: { posts: number; subscribers: number; contacts: number }, pub: PublicationWithCounts) => ({
+    (acc: { posts: number; subscribers: number; paidSubscribers: number; contacts: number }, pub: PublicationWithCounts) => ({
       posts: acc.posts + pub._count.posts,
-      subscribers: acc.subscribers + pub._count.subscriptions,
+      subscribers: acc.subscribers + pub._count.activeSubscriberContacts,
+      paidSubscribers: acc.paidSubscribers + pub._count.activeSubscriptions,
       contacts: acc.contacts + pub._count.subscriberContacts,
     }),
-    { posts: 0, subscribers: 0, contacts: 0 }
+    { posts: 0, subscribers: 0, paidSubscribers: 0, contacts: 0 }
   )
 
   return (
@@ -85,20 +88,20 @@ export default async function PortalPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalStats.subscribers}</div>
             <p className="text-xs text-muted-foreground">
-              Active subscribers
+              Active email subscribers
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
+            <CardTitle className="text-sm font-medium">Paid Subscribers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalStats.contacts}</div>
+            <div className="text-2xl font-bold">{totalStats.paidSubscribers}</div>
             <p className="text-xs text-muted-foreground">
-              Email contacts
+              Active paid subscriptions
             </p>
           </CardContent>
         </Card>
@@ -137,7 +140,7 @@ export default async function PortalPage() {
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {publications.slice(0, 6).map((publication: PublicationWithCounts) => (
+            {publications.slice(0, 6).map((publication) => (
               <Card key={publication.id} className="group hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -160,7 +163,7 @@ export default async function PortalPage() {
                         <div className="text-muted-foreground">Posts</div>
                       </div>
                       <div className="text-center">
-                        <div className="font-semibold">{publication._count.subscriptions}</div>
+                        <div className="font-semibold">{publication._count.activeSubscriberContacts}</div>
                         <div className="text-muted-foreground">Subscribers</div>
                       </div>
                       <div className="text-center">

@@ -42,6 +42,11 @@ const navigation = [
     icon: Mail,
   },
   {
+    name: "Email Templates",
+    href: "/portal/email-templates",
+    icon: Mail,
+  },
+  {
     name: "Courses",
     href: "/portal/courses",
     icon: BookOpen,

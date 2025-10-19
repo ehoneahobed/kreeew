@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,14 +39,18 @@ interface Campaign {
   }
 }
 
-export default function CampaignViewPage() {
-  const params = useParams()
+export default function CampaignViewPage({
+  params: paramsPromise,
+}: {
+  params: Promise<{ slug: string; campaignId: string }>
+}) {
+  const params = use(paramsPromise)
   const router = useRouter()
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const slug = params.slug as string
-  const campaignId = params.campaignId as string
+  const slug = params.slug
+  const campaignId = params.campaignId
 
   useEffect(() => {
     fetchCampaign()

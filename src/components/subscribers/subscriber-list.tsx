@@ -17,7 +17,8 @@ import {
   Edit,
   Trash2,
   UserCheck,
-  UserX
+  UserX,
+  BookOpen
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -39,6 +40,33 @@ interface Subscriber {
     id: string
     name: string
     email: string
+  }
+  publication?: {
+    id: string
+    name: string
+    slug: string
+  }
+  user?: {
+    id: string
+    name: string
+    email: string
+    courseEnrollments?: {
+      id: string
+      course: {
+        id: string
+        title: string
+      }
+    }[]
+  }
+  emailLogs?: {
+    id: string
+    campaign?: {
+      id: string
+      name: string
+    }
+  }[]
+  _count?: {
+    emailLogs: number
   }
 }
 
@@ -175,6 +203,11 @@ export function SubscriberList({
                       <Badge variant={subscriber.isActive ? "default" : "secondary"}>
                         {subscriber.isActive ? "Active" : "Inactive"}
                       </Badge>
+                      {subscriber.publication && (
+                        <Badge variant="outline" className="text-xs">
+                          {subscriber.publication.name}
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -193,6 +226,20 @@ export function SubscriberList({
                               </Badge>
                             ))}
                           </div>
+                        </div>
+                      )}
+                      
+                      {subscriber.user?.courseEnrollments && subscriber.user.courseEnrollments.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <BookOpen className="w-3 h-3" />
+                          <span>{subscriber.user.courseEnrollments.length} courses</span>
+                        </div>
+                      )}
+                      
+                      {subscriber._count && subscriber._count.emailLogs > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Mail className="w-3 h-3" />
+                          <span>{subscriber._count.emailLogs} emails</span>
                         </div>
                       )}
                     </div>

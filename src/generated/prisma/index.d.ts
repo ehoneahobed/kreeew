@@ -219,6 +219,7 @@ export type CampaignStatus = (typeof CampaignStatus)[keyof typeof CampaignStatus
 export const WorkflowStatus: {
   ACTIVE: 'ACTIVE',
   PAUSED: 'PAUSED',
+  DRAFT: 'DRAFT',
   ARCHIVED: 'ARCHIVED'
 };
 
@@ -22414,6 +22415,7 @@ export namespace Prisma {
     id: string | null
     publicationId: string | null
     name: string | null
+    description: string | null
     trigger: string | null
     status: $Enums.WorkflowStatus | null
     isActive: boolean | null
@@ -22425,6 +22427,7 @@ export namespace Prisma {
     id: string | null
     publicationId: string | null
     name: string | null
+    description: string | null
     trigger: string | null
     status: $Enums.WorkflowStatus | null
     isActive: boolean | null
@@ -22436,7 +22439,9 @@ export namespace Prisma {
     id: number
     publicationId: number
     name: number
+    description: number
     trigger: number
+    triggerConfig: number
     status: number
     isActive: number
     createdAt: number
@@ -22449,6 +22454,7 @@ export namespace Prisma {
     id?: true
     publicationId?: true
     name?: true
+    description?: true
     trigger?: true
     status?: true
     isActive?: true
@@ -22460,6 +22466,7 @@ export namespace Prisma {
     id?: true
     publicationId?: true
     name?: true
+    description?: true
     trigger?: true
     status?: true
     isActive?: true
@@ -22471,7 +22478,9 @@ export namespace Prisma {
     id?: true
     publicationId?: true
     name?: true
+    description?: true
     trigger?: true
+    triggerConfig?: true
     status?: true
     isActive?: true
     createdAt?: true
@@ -22555,7 +22564,9 @@ export namespace Prisma {
     id: string
     publicationId: string
     name: string
+    description: string | null
     trigger: string
+    triggerConfig: JsonValue | null
     status: $Enums.WorkflowStatus
     isActive: boolean
     createdAt: Date
@@ -22583,7 +22594,9 @@ export namespace Prisma {
     id?: boolean
     publicationId?: boolean
     name?: boolean
+    description?: boolean
     trigger?: boolean
+    triggerConfig?: boolean
     status?: boolean
     isActive?: boolean
     createdAt?: boolean
@@ -22597,7 +22610,9 @@ export namespace Prisma {
     id?: boolean
     publicationId?: boolean
     name?: boolean
+    description?: boolean
     trigger?: boolean
+    triggerConfig?: boolean
     status?: boolean
     isActive?: boolean
     createdAt?: boolean
@@ -22609,7 +22624,9 @@ export namespace Prisma {
     id?: boolean
     publicationId?: boolean
     name?: boolean
+    description?: boolean
     trigger?: boolean
+    triggerConfig?: boolean
     status?: boolean
     isActive?: boolean
     createdAt?: boolean
@@ -22621,14 +22638,16 @@ export namespace Prisma {
     id?: boolean
     publicationId?: boolean
     name?: boolean
+    description?: boolean
     trigger?: boolean
+    triggerConfig?: boolean
     status?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AutomationWorkflowOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "publicationId" | "name" | "trigger" | "status" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["automationWorkflow"]>
+  export type AutomationWorkflowOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "publicationId" | "name" | "description" | "trigger" | "triggerConfig" | "status" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["automationWorkflow"]>
   export type AutomationWorkflowInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     steps?: boolean | AutomationWorkflow$stepsArgs<ExtArgs>
     publication?: boolean | PublicationDefaultArgs<ExtArgs>
@@ -22651,7 +22670,9 @@ export namespace Prisma {
       id: string
       publicationId: string
       name: string
+      description: string | null
       trigger: string
+      triggerConfig: Prisma.JsonValue | null
       status: $Enums.WorkflowStatus
       isActive: boolean
       createdAt: Date
@@ -23084,7 +23105,9 @@ export namespace Prisma {
     readonly id: FieldRef<"AutomationWorkflow", 'String'>
     readonly publicationId: FieldRef<"AutomationWorkflow", 'String'>
     readonly name: FieldRef<"AutomationWorkflow", 'String'>
+    readonly description: FieldRef<"AutomationWorkflow", 'String'>
     readonly trigger: FieldRef<"AutomationWorkflow", 'String'>
+    readonly triggerConfig: FieldRef<"AutomationWorkflow", 'Json'>
     readonly status: FieldRef<"AutomationWorkflow", 'WorkflowStatus'>
     readonly isActive: FieldRef<"AutomationWorkflow", 'Boolean'>
     readonly createdAt: FieldRef<"AutomationWorkflow", 'DateTime'>
@@ -33966,7 +33989,9 @@ export namespace Prisma {
     id: 'id',
     publicationId: 'publicationId',
     name: 'name',
+    description: 'description',
     trigger: 'trigger',
+    triggerConfig: 'triggerConfig',
     status: 'status',
     isActive: 'isActive',
     createdAt: 'createdAt',
@@ -35681,7 +35706,9 @@ export namespace Prisma {
     id?: StringFilter<"AutomationWorkflow"> | string
     publicationId?: StringFilter<"AutomationWorkflow"> | string
     name?: StringFilter<"AutomationWorkflow"> | string
+    description?: StringNullableFilter<"AutomationWorkflow"> | string | null
     trigger?: StringFilter<"AutomationWorkflow"> | string
+    triggerConfig?: JsonNullableFilter<"AutomationWorkflow">
     status?: EnumWorkflowStatusFilter<"AutomationWorkflow"> | $Enums.WorkflowStatus
     isActive?: BoolFilter<"AutomationWorkflow"> | boolean
     createdAt?: DateTimeFilter<"AutomationWorkflow"> | Date | string
@@ -35694,7 +35721,9 @@ export namespace Prisma {
     id?: SortOrder
     publicationId?: SortOrder
     name?: SortOrder
+    description?: SortOrderInput | SortOrder
     trigger?: SortOrder
+    triggerConfig?: SortOrderInput | SortOrder
     status?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -35710,7 +35739,9 @@ export namespace Prisma {
     NOT?: AutomationWorkflowWhereInput | AutomationWorkflowWhereInput[]
     publicationId?: StringFilter<"AutomationWorkflow"> | string
     name?: StringFilter<"AutomationWorkflow"> | string
+    description?: StringNullableFilter<"AutomationWorkflow"> | string | null
     trigger?: StringFilter<"AutomationWorkflow"> | string
+    triggerConfig?: JsonNullableFilter<"AutomationWorkflow">
     status?: EnumWorkflowStatusFilter<"AutomationWorkflow"> | $Enums.WorkflowStatus
     isActive?: BoolFilter<"AutomationWorkflow"> | boolean
     createdAt?: DateTimeFilter<"AutomationWorkflow"> | Date | string
@@ -35723,7 +35754,9 @@ export namespace Prisma {
     id?: SortOrder
     publicationId?: SortOrder
     name?: SortOrder
+    description?: SortOrderInput | SortOrder
     trigger?: SortOrder
+    triggerConfig?: SortOrderInput | SortOrder
     status?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -35740,7 +35773,9 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"AutomationWorkflow"> | string
     publicationId?: StringWithAggregatesFilter<"AutomationWorkflow"> | string
     name?: StringWithAggregatesFilter<"AutomationWorkflow"> | string
+    description?: StringNullableWithAggregatesFilter<"AutomationWorkflow"> | string | null
     trigger?: StringWithAggregatesFilter<"AutomationWorkflow"> | string
+    triggerConfig?: JsonNullableWithAggregatesFilter<"AutomationWorkflow">
     status?: EnumWorkflowStatusWithAggregatesFilter<"AutomationWorkflow"> | $Enums.WorkflowStatus
     isActive?: BoolWithAggregatesFilter<"AutomationWorkflow"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"AutomationWorkflow"> | Date | string
@@ -37856,7 +37891,9 @@ export namespace Prisma {
   export type AutomationWorkflowCreateInput = {
     id?: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -37869,7 +37906,9 @@ export namespace Prisma {
     id?: string
     publicationId: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -37880,7 +37919,9 @@ export namespace Prisma {
   export type AutomationWorkflowUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37893,7 +37934,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     publicationId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37905,7 +37948,9 @@ export namespace Prisma {
     id?: string
     publicationId: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -37915,7 +37960,9 @@ export namespace Prisma {
   export type AutomationWorkflowUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -37926,7 +37973,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     publicationId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -39889,7 +39938,9 @@ export namespace Prisma {
     id?: SortOrder
     publicationId?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     trigger?: SortOrder
+    triggerConfig?: SortOrder
     status?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -39900,6 +39951,7 @@ export namespace Prisma {
     id?: SortOrder
     publicationId?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     trigger?: SortOrder
     status?: SortOrder
     isActive?: SortOrder
@@ -39911,6 +39963,7 @@ export namespace Prisma {
     id?: SortOrder
     publicationId?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     trigger?: SortOrder
     status?: SortOrder
     isActive?: SortOrder
@@ -43856,7 +43909,9 @@ export namespace Prisma {
   export type AutomationWorkflowCreateWithoutPublicationInput = {
     id?: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -43867,7 +43922,9 @@ export namespace Prisma {
   export type AutomationWorkflowUncheckedCreateWithoutPublicationInput = {
     id?: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -44285,7 +44342,9 @@ export namespace Prisma {
     id?: StringFilter<"AutomationWorkflow"> | string
     publicationId?: StringFilter<"AutomationWorkflow"> | string
     name?: StringFilter<"AutomationWorkflow"> | string
+    description?: StringNullableFilter<"AutomationWorkflow"> | string | null
     trigger?: StringFilter<"AutomationWorkflow"> | string
+    triggerConfig?: JsonNullableFilter<"AutomationWorkflow">
     status?: EnumWorkflowStatusFilter<"AutomationWorkflow"> | $Enums.WorkflowStatus
     isActive?: BoolFilter<"AutomationWorkflow"> | boolean
     createdAt?: DateTimeFilter<"AutomationWorkflow"> | Date | string
@@ -46370,7 +46429,9 @@ export namespace Prisma {
   export type AutomationWorkflowCreateWithoutStepsInput = {
     id?: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -46382,7 +46443,9 @@ export namespace Prisma {
     id?: string
     publicationId: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -46408,7 +46471,9 @@ export namespace Prisma {
   export type AutomationWorkflowUpdateWithoutStepsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46420,7 +46485,9 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     publicationId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48364,7 +48431,9 @@ export namespace Prisma {
   export type AutomationWorkflowCreateManyPublicationInput = {
     id?: string
     name: string
+    description?: string | null
     trigger: string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: $Enums.WorkflowStatus
     isActive?: boolean
     createdAt?: Date | string
@@ -48500,7 +48569,9 @@ export namespace Prisma {
   export type AutomationWorkflowUpdateWithoutPublicationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48511,7 +48582,9 @@ export namespace Prisma {
   export type AutomationWorkflowUncheckedUpdateWithoutPublicationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -48522,7 +48595,9 @@ export namespace Prisma {
   export type AutomationWorkflowUncheckedUpdateManyWithoutPublicationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
     trigger?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableJsonNullValueInput | InputJsonValue
     status?: EnumWorkflowStatusFieldUpdateOperationsInput | $Enums.WorkflowStatus
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

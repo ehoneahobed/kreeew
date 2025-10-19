@@ -23,10 +23,17 @@ export async function GET(request: NextRequest) {
     const publicationIds = publications.map(p => p.id)
 
     const automations = await prisma.automationWorkflow.findMany({
-      where: { 
+      where: {
         publicationId: { in: publicationIds }
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        trigger: true,
+        status: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
         publication: {
           select: {
             id: true,

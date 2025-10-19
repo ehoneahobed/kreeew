@@ -43,31 +43,72 @@ export async function GET(
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const search = searchParams.get('search')
-    const tag = searchParams.get('tag')
+    const tags = searchParams.getAll('tags')
     const status = searchParams.get('status')
+    const courses = searchParams.getAll('courses')
+    const campaigns = searchParams.getAll('campaigns')
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
 
     const whereClause: any = { publicationId: publication.id }
 
     if (search) {
-      whereClause.email = {
-        contains: search,
-        mode: 'insensitive',
-      }
+      whereClause.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { user: { name: { contains: search, mode: 'insensitive' } } }
+      ]
     }
 
-    if (tag) {
-      whereClause.tags = {
-        has: tag,
-      }
+    if (tags.length > 0) {
+      whereClause.tags = { hasSome: tags }
     }
 
     if (status) {
       whereClause.isActive = status === 'active'
     }
 
+    if (dateFrom || dateTo) {
+      whereClause.subscribedAt = {}
+      if (dateFrom) whereClause.subscribedAt.gte = new Date(dateFrom)
+      if (dateTo) whereClause.subscribedAt.lte = new Date(dateTo)
+    }
+
+    // Handle course and campaign filters
+    let courseFilter = {}
+    let campaignFilter = {}
+
+    if (courses.length > 0) {
+      courseFilter = {
+        user: {
+          courseEnrollments: {
+            some: {
+              courseId: { in: courses }
+            }
+          }
+        }
+      }
+    }
+
+    if (campaigns.length > 0) {
+      campaignFilter = {
+        emailLogs: {
+          some: {
+            campaignId: { in: campaigns }
+          }
+        }
+      }
+    }
+
+    // Combine all filters
+    const finalWhereClause = {
+      ...whereClause,
+      ...(Object.keys(courseFilter).length > 0 && courseFilter),
+      ...(Object.keys(campaignFilter).length > 0 && campaignFilter)
+    }
+
     const [subscribers, total] = await Promise.all([
       prisma.subscriberContact.findMany({
-        where: whereClause,
+        where: finalWhereClause,
         include: {
           user: {
             select: {
@@ -76,13 +117,42 @@ export async function GET(
               email: true,
             },
           },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              courseEnrollments: {
+                include: {
+                  course: {
+                    select: {
+                      id: true,
+                      title: true,
+                    }
+                  }
+                }
+              }
+            }
+          },
+          emailLogs: {
+            include: {
+              campaign: {
+                select: {
+                  id: true,
+                  name: true,
+                }
+              }
+            },
+            take: 5,
+            orderBy: { sentAt: "desc" }
+          }
         },
         orderBy: { subscribedAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
       }),
       prisma.subscriberContact.count({
-        where: whereClause,
+        where: finalWhereClause,
       }),
     ])
 

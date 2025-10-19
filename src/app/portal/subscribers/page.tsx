@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { 
   Users,
   Search,
@@ -13,7 +15,8 @@ import {
   Mail,
   Calendar,
   Tag,
-  MoreHorizontal
+  MoreHorizontal,
+  BookOpen
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -37,6 +40,19 @@ interface Subscriber {
   _count: {
     emailLogs: number
   }
+  user?: {
+    id: string
+    name?: string
+    email: string
+    image?: string
+    courseEnrollments?: {
+      id: string
+      course: {
+        id: string
+        title: string
+      }
+    }[]
+  }
 }
 
 export default function GlobalSubscribersPage() {
@@ -44,21 +60,84 @@ export default function GlobalSubscribersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all")
+  const [selectedPublications, setSelectedPublications] = useState<string[]>([])
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([])
+  const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [dateRange, setDateRange] = useState<{from?: string, to?: string}>({})
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    pages: 0,
+  })
+  
+  // Dynamic filter data
+  const [availablePublications, setAvailablePublications] = useState<Array<{id: string, name: string, slug: string}>>([])
+  const [availableCourses, setAvailableCourses] = useState<Array<{id: string, title: string}>>([])
+  const [availableCampaigns, setAvailableCampaigns] = useState<Array<{id: string, name: string}>>([])
+  const [availableTags, setAvailableTags] = useState<string[]>([])
+  const [filterDataLoading, setFilterDataLoading] = useState(true)
 
   useEffect(() => {
     fetchAllSubscribers()
+  }, [pagination.page, searchTerm, filterStatus, selectedPublications, selectedCourses, selectedCampaigns, selectedTags, dateRange])
+
+  useEffect(() => {
+    fetchFilterData()
   }, [])
+
+  const fetchFilterData = async () => {
+    try {
+      setFilterDataLoading(true)
+      const response = await fetch('/api/subscribers/filter-data')
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch filter data")
+      }
+
+      const data = await response.json()
+      setAvailablePublications(data.publications || [])
+      setAvailableCourses(data.courses || [])
+      setAvailableCampaigns(data.campaigns || [])
+      setAvailableTags(data.tags || [])
+    } catch (error) {
+      console.error("Error fetching filter data:", error)
+      toast.error("Failed to load filter options")
+    } finally {
+      setFilterDataLoading(false)
+    }
+  }
 
   const fetchAllSubscribers = async () => {
     try {
-      const response = await fetch("/api/subscribers")
+      setLoading(true)
+      
+      // Build query parameters
+      const params = new URLSearchParams()
+      params.set('page', pagination.page.toString())
+      params.set('limit', pagination.limit.toString())
+      
+      if (searchTerm) params.set('search', searchTerm)
+      if (filterStatus !== 'all') params.set('status', filterStatus)
+      selectedPublications.forEach(pub => params.append('publications', pub))
+      selectedCourses.forEach(course => params.append('courses', course))
+      selectedCampaigns.forEach(campaign => params.append('campaigns', campaign))
+      selectedTags.forEach(tag => params.append('tags', tag))
+      if (dateRange.from) params.set('dateFrom', dateRange.from)
+      if (dateRange.to) params.set('dateTo', dateRange.to)
+
+      const response = await fetch(`/api/subscribers?${params.toString()}`)
       
       if (!response.ok) {
-        throw new Error("Failed to fetch subscribers")
+        const errorData = await response.text()
+        console.error("API Error:", errorData)
+        throw new Error(`Failed to fetch subscribers: ${response.status} ${response.statusText}`)
       }
 
       const data = await response.json()
       setSubscribers(data.subscribers)
+      setPagination(data.pagination)
     } catch (error) {
       console.error("Error fetching subscribers:", error)
       toast.error("Failed to load subscribers")
@@ -67,17 +146,8 @@ export default function GlobalSubscribersPage() {
     }
   }
 
-  const filteredSubscribers = subscribers.filter(subscriber => {
-    const matchesSearch = subscriber.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         subscriber.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         subscriber.publication.name.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesFilter = filterStatus === "all" || 
-                         (filterStatus === "active" && subscriber.isActive) ||
-                         (filterStatus === "inactive" && !subscriber.isActive)
-    
-    return matchesSearch && matchesFilter
-  })
+  // Server-side filtering, no need for client-side filtering
+  const filteredSubscribers = subscribers
 
   if (loading) {
     return (
@@ -166,41 +236,244 @@ export default function GlobalSubscribersPage() {
         </Card>
       </div>
 
-      {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Search subscribers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={filterStatus === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterStatus("all")}
-          >
-            All
-          </Button>
-          <Button
-            variant={filterStatus === "active" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterStatus("active")}
-          >
-            Active
-          </Button>
-          <Button
-            variant={filterStatus === "inactive" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilterStatus("inactive")}
-          >
-            Inactive
-          </Button>
-        </div>
-      </div>
+      {/* Enhanced Filters and Search */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search subscribers by email or name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Filter Row 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Status</label>
+              <Select value={filterStatus} onValueChange={(value: "all" | "active" | "inactive") => setFilterStatus(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Date Range</label>
+              <div className="flex gap-2">
+                <Input
+                  type="date"
+                  placeholder="From"
+                  value={dateRange.from || ""}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                />
+                <Input
+                  type="date"
+                  placeholder="To"
+                  value={dateRange.to || ""}
+                  onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("")
+                  setFilterStatus("all")
+                  setSelectedPublications([])
+                  setSelectedCourses([])
+                  setSelectedCampaigns([])
+                  setSelectedTags([])
+                  setDateRange({})
+                  setPagination(prev => ({ ...prev, page: 1 }))
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+
+          {/* Filter Row 2 - Multi-selects */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Publications</label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded p-2">
+                {filterDataLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading publications...</div>
+                ) : availablePublications.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No publications found</div>
+                ) : (
+                  availablePublications.map((pub) => (
+                    <div key={pub.slug} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`pub-${pub.slug}`}
+                        checked={selectedPublications.includes(pub.slug)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedPublications(prev => [...prev, pub.slug])
+                          } else {
+                            setSelectedPublications(prev => prev.filter(p => p !== pub.slug))
+                          }
+                        }}
+                      />
+                      <label htmlFor={`pub-${pub.slug}`} className="text-sm">{pub.name}</label>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Courses</label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded p-2">
+                {filterDataLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading courses...</div>
+                ) : availableCourses.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No courses found</div>
+                ) : (
+                  availableCourses.map((course) => (
+                    <div key={course.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`course-${course.id}`}
+                        checked={selectedCourses.includes(course.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedCourses(prev => [...prev, course.id])
+                          } else {
+                            setSelectedCourses(prev => prev.filter(c => c !== course.id))
+                          }
+                        }}
+                      />
+                      <label htmlFor={`course-${course.id}`} className="text-sm">
+                        {course.title}
+                        {course.publicationName && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({course.publicationName})
+                          </span>
+                        )}
+                      </label>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Campaigns</label>
+              <div className="space-y-2 max-h-32 overflow-y-auto border rounded p-2">
+                {filterDataLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading campaigns...</div>
+                ) : availableCampaigns.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No campaigns found</div>
+                ) : (
+                  availableCampaigns.map((campaign) => (
+                    <div key={campaign.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`campaign-${campaign.id}`}
+                        checked={selectedCampaigns.includes(campaign.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedCampaigns(prev => [...prev, campaign.id])
+                          } else {
+                            setSelectedCampaigns(prev => prev.filter(c => c !== campaign.id))
+                          }
+                        }}
+                      />
+                      <label htmlFor={`campaign-${campaign.id}`} className="text-sm">
+                        {campaign.name}
+                        {campaign.publicationName && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({campaign.publicationName})
+                          </span>
+                        )}
+                      </label>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Tags Filter */}
+          {availableTags.length > 0 && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">Tags</label>
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      if (selectedTags.includes(tag)) {
+                        setSelectedTags(prev => prev.filter(t => t !== tag))
+                      } else {
+                        setSelectedTags(prev => [...prev, tag])
+                      }
+                    }}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Active Filters Display */}
+          {(selectedPublications.length > 0 || selectedCourses.length > 0 || selectedCampaigns.length > 0 || selectedTags.length > 0) && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">Active Filters</label>
+              <div className="flex flex-wrap gap-2">
+                {selectedPublications.map(pub => {
+                  const publication = availablePublications.find(p => p.slug === pub)
+                  return (
+                    <Badge key={pub} variant="secondary" className="cursor-pointer" onClick={() => setSelectedPublications(prev => prev.filter(p => p !== pub))}>
+                      Publication: {publication?.name || pub} ×
+                    </Badge>
+                  )
+                })}
+                {selectedCourses.map(courseId => {
+                  const course = availableCourses.find(c => c.id === courseId)
+                  return (
+                    <Badge key={courseId} variant="secondary" className="cursor-pointer" onClick={() => setSelectedCourses(prev => prev.filter(c => c !== courseId))}>
+                      Course: {course?.title || courseId} ×
+                    </Badge>
+                  )
+                })}
+                {selectedCampaigns.map(campaignId => {
+                  const campaign = availableCampaigns.find(c => c.id === campaignId)
+                  return (
+                    <Badge key={campaignId} variant="secondary" className="cursor-pointer" onClick={() => setSelectedCampaigns(prev => prev.filter(c => c !== campaignId))}>
+                      Campaign: {campaign?.name || campaignId} ×
+                    </Badge>
+                  )
+                })}
+                {selectedTags.map(tag => (
+                  <Badge key={tag} variant="secondary" className="cursor-pointer" onClick={() => setSelectedTags(prev => prev.filter(t => t !== tag))}>
+                    Tag: {tag} ×
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Subscribers List */}
       <Card>
@@ -253,6 +526,18 @@ export default function GlobalSubscribersPage() {
                           <span>{subscriber.tags.length} tags</span>
                         </div>
                       )}
+                      {subscriber.user?.courseEnrollments && subscriber.user.courseEnrollments.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <BookOpen className="w-3 h-3" />
+                          <span>{subscriber.user.courseEnrollments.length} courses</span>
+                        </div>
+                      )}
+                      {subscriber._count.emailLogs > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Mail className="w-3 h-3" />
+                          <span>{subscriber._count.emailLogs} emails</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -270,6 +555,31 @@ export default function GlobalSubscribersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {pagination.pages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+            disabled={pagination.page === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.pages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+            disabled={pagination.page === pagination.pages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

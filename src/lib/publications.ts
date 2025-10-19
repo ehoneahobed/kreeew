@@ -81,10 +81,10 @@ export async function createPublication(
 }
 
 /**
- * Get all publications for a user
+ * Get all publications for a user with enhanced counts
  */
 export async function getUserPublications(userId: string) {
-  return await prisma.publication.findMany({
+  const publications = await prisma.publication.findMany({
     where: { userId },
     include: {
       _count: {
@@ -97,6 +97,37 @@ export async function getUserPublications(userId: string) {
     },
     orderBy: { createdAt: "desc" },
   })
+
+  // Add active counts for each publication
+  const publicationsWithCounts = await Promise.all(
+    publications.map(async (pub) => {
+      const [activeSubscriptions, activeSubscriberContacts] = await Promise.all([
+        prisma.subscription.count({
+          where: {
+            publicationId: pub.id,
+            status: "ACTIVE"
+          }
+        }),
+        prisma.subscriberContact.count({
+          where: {
+            publicationId: pub.id,
+            isActive: true
+          }
+        })
+      ])
+
+      return {
+        ...pub,
+        _count: {
+          ...pub._count,
+          activeSubscriptions,
+          activeSubscriberContacts,
+        }
+      }
+    })
+  )
+
+  return publicationsWithCounts
 }
 
 /**
@@ -138,7 +169,7 @@ export async function getPublicationBySlug(slug: string) {
  * Get a publication by slug for dashboard (includes all posts including drafts)
  */
 export async function getPublicationByIdForDashboard(slug: string, userId: string) {
-  return await prisma.publication.findFirst({
+  const publication = await prisma.publication.findFirst({
     where: { 
       slug,
       userId, // Ensure user owns this publication
@@ -177,6 +208,35 @@ export async function getPublicationByIdForDashboard(slug: string, userId: strin
       },
     },
   })
+
+  if (!publication) {
+    return null
+  }
+
+  // Add active counts
+  const [activeSubscriptions, activeSubscriberContacts] = await Promise.all([
+    prisma.subscription.count({
+      where: {
+        publicationId: publication.id,
+        status: "ACTIVE"
+      }
+    }),
+    prisma.subscriberContact.count({
+      where: {
+        publicationId: publication.id,
+        isActive: true
+      }
+    })
+  ])
+
+  return {
+    ...publication,
+    _count: {
+      ...publication._count,
+      activeSubscriptions,
+      activeSubscriberContacts,
+    }
+  }
 }
 
 /**
